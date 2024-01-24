@@ -5,7 +5,7 @@ class User{
     constructor(name, options, lastData, timeToCheck){
         this.name = name;
         this.options = options;
-        this.lastData = lastData;
+        this.lastID = lastData;
         this.timeToCheck = timeToCheck;
     }
 
@@ -40,8 +40,8 @@ class User{
         req.end();
       });
     }
-    updateLastData(newData){
-      this.lastData = newData;
+    updateLastQuestionID(newID){
+      this.lastID = newID;
     }
     updateTimeToCheck(newTime){
       this.timeToCheck = newTime;

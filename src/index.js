@@ -41,7 +41,7 @@ const sendQuestionMessage = (msg) => {
 }
 
 const waitTimeSec = 10;
-const extraTime = 10*60;
+const extraTime = 5*60;
 
 setInterval(async () => {
   for(let i = 0;i<accounts.length;i++){
@@ -52,7 +52,6 @@ setInterval(async () => {
     }
     try {
         let data = await account.fetchDataFromApi()
-    
     // Check data is fetched if not continue to next account;
     if(!data){
         console.log("There is some problem fetching data in ", account.name);
@@ -62,18 +61,20 @@ setInterval(async () => {
     // If data don't have a question : continue
     if (data.errors){
         console.log( account.name , "Waiting for 1 minute...");
-        sendErrorMessage("No Question is there"); // remove
+        // sendErrorMessage(account.name + " No Question is there"); // remove
         continue;
     }
-    // Check if newData and lastData are equal
-    if(JSON.stringify(data) != JSON.stringify(account.lastData)){
-        console.log("Either data are equal or there is no fetched Data");
-        account.updateLastData(data);
-        account.updateTimeToCheck(Math.floor(Date.now()/1000)+extraTime);
+    const queID = data.data.nextQuestionAnsweringAssignment.question.id;  // getID of fetched question
+    // Check if queID and lastID are equal
+    if(queID == account.lastID){
         continue;
     }
     // If data have a question : send a message by the bot
-    sendQuestionMessage(account.name, " You have a question");
+    console.log("Updating time and lastID", data);
+    account.updateLastQuestionID(queID);
+    account.updateTimeToCheck(Math.floor(Date.now()/1000)+extraTime);
+    // send new question message
+    sendQuestionMessage(account.name + " You have a question");
 
     } catch (error) {
         console.error('Some error occured:', error);
