@@ -40,7 +40,7 @@ class User{
         req.end();
       });
     }
-    updateLastQuestionID(newID){
+    updateLastID(newID){
       this.lastID = newID;
     }
     updateTimeToCheck(newTime){
