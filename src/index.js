@@ -12,10 +12,12 @@ const client = new Client({ intents: [
     IntentsBitField.Flags.MessageContent
 ] });
 
-const waitTimeSec = 10;
-const extraTime = 5*60;
+const waitTimeSec = 5;
+const extraTime = 10*60;
 let on = 0;
 let forceOn = 0;
+let msgSent = 0;
+let currHours = (new Date(Date.now())).getHours();
 
 client.on('ready', () => {
     console.log("Bot Ready!!");
@@ -26,10 +28,10 @@ client.on('messageCreate', (msg) => {
     if(msg.content === "hello" || msg.content === "Hello" || msg.content === "Hii" || msg.content === "hii"){
         msg.reply("Hey!! How are you Today");
     }
-    else if(msg.content === "on" || msg.content === "activate" && 0<Date.now().getHours()<8){
+    else if((msg.content === "on" || msg.content === "activate") && 0 < currHours && currHours < 8){
         forceOn = 1;
         sendMessage(client, "Hello Night Owl !!! I'm awake");
-    }else if(msg.content === "off" && Date.now().getHours() < 8){
+    }else if(msg.content === "off" && currHours < 8){
         on = 0;forceOn=0;
         sendMessage(client, "Good Night🛌💤");
     }
@@ -43,16 +45,22 @@ for(let i = 0;i<accountss.length;i++){
 }
 
 setInterval(async () => {
-    const currTime = new Date();
-    if(currTime.getHours()>=0 && !on){
+    currHours = (new Date(Date.now())).getHours();
+    if(currHours>=8 && !on){
         on = 1;
         forceOn = 0;
-        sendMessage(client, "Morning buddies, let's get to work!!");
+        msgSent = 0;
+        if(currHours==8){
+            sendMessage(client, "Morning buddies, let's get to work!!")
+            console.log("morning");
+        };
     }
-    else if(0 < currTime.getHours() && currTime.getHours() < 8 && !forceOn){
+    else if(0 < currHours && currHours < 8 && !forceOn & !msgSent){
         on = 0;
         forceOn = 0;
+        msgSent = 1;
         sendMessage(client, "Bot is now sleeping, so should you 😴😴\nUse command on/activate to wake it up");
+        console.log("sleeping");
     }
     if(on || forceOn){
   for(let i = 0;i<accounts.length;i++){
