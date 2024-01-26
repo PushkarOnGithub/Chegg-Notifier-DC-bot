@@ -1,7 +1,7 @@
 const { Client, IntentsBitField } = require('discord.js');
 const accountss = require('./accounts');
 const User = require('./user');
-const {sendMessage, sendQuestionMessage, acceptQuestion} = require('./modules');
+const {sendMessage, sendQuestionMessage} = require('./modules');
 
 require('dotenv').config();
 
@@ -12,15 +12,15 @@ const client = new Client({ intents: [
     IntentsBitField.Flags.MessageContent
 ] });
 
-const waitTimeSec = 5;
+const waitTimeSec = 120;
 const extraTime = 10*60;
 let on = 0;
 let forceOn = 0;
 let msgSent = 0;
-let currHours = (new Date(Date.now())).getHours();
+let currHours = ((new Date(Date.now())).getHours()+5)%24;
 
 client.on('ready', () => {
-    console.log("Bot Ready!!");
+    console.log(`${client.user.tag} Bot Ready!!`);
 });
 
 client.on('messageCreate', (msg) => {
@@ -45,7 +45,7 @@ for(let i = 0;i<accountss.length;i++){
 }
 
 setInterval(async () => {
-    currHours = (new Date(Date.now())).getHours();
+    currHours = ((new Date(Date.now())).getHours()+5)%24;
     if(currHours>=8 && !on){
         on = 1;
         forceOn = 0;
@@ -79,7 +79,7 @@ setInterval(async () => {
 
     // If data don't have a question : continue
     if (data.errors){
-        console.log( account.name , "Waiting for 1 minute...");
+        console.log( account.name , `Waiting for ${waitTimeSec} seconds...`);
         // sendMessage(client, account.name + " No Question is there"); // remove
         continue;
     }
@@ -89,13 +89,18 @@ setInterval(async () => {
         continue;
     }
     // If data have a question : send a message by the bot
-    console.log("Got A Question Updating data", data);
-    // acceptQuestion(queID);  //TODO
+    console.log("Got a Question Updating data", data);
     account.updateLastID(queID);
     account.updateTimeToCheck(Math.floor(Date.now()/1000)+extraTime);
     // send new question message
-    sendQuestionMessage(client, account.name + " You have a question");
-
+    sendQuestionMessage(client, data.data.nextQuestionAnsweringAssignment.question.body, account.name);
+    // try to accept the Question
+    const response = await account.acceptQuestion(); 
+    if(response.errors){
+        sendMessage(client, account.name + " Problem in accepting the question");
+    }else{
+        sendMessage(client, account.name + " Question has been accepted");
+    }
     } catch (error) {
         console.error('Some error occured:', error);
     }}

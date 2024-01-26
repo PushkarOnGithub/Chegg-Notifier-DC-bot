@@ -1,53 +1,32 @@
-const https = require('https');
+// Function to extract text from HTML
+function processHtml(html) {
+    return html.replace(/<\/?[^>]+(>|$)/g, '');
+}
+
+// Function to extract image URLs from HTML
+function extractImageUrls(html) {
+    const regex = /<img .*?src=['"](.*?)['"].*?>/g;
+    const matches = [];
+    let match;
+    while ((match = regex.exec(html)) !== null) {
+        matches.push(match[1]);
+    }
+    return matches;
+}
+
 const sendMessage = (client, msg) => {
     const channel = client.channels.cache.get(process.env.ChannelID);
     channel.send(msg);
 }
 
-const sendQuestionMessage = (client, msg) => {
+const sendQuestionMessage = (client, msg, accountName) => {
+    const textContent = processHtml(msg);
+    // const imageUrls = extractImageUrls(msg); //TODO
+    // get the channel
     const channel = client.channels.cache.get(process.env.ChannelID);
-    channel.send(msg);
+    channel.send(accountName + " You have a question‼️");
+    channel.send(textContent);
+    // channel.send("To skip use skip="+accountName);   //TODO
 }
 
-const acceptQuestion = async (id) => {
-    options = {
-        "method": "POST",
-        "data": {
-            "operationName": "StartQuestionAnswering", "variables": { "questionId": id }, "query": "mutation StartQuestionAnswering($questionId: Long!) {\n  startQuestionAnswering(questionId: $questionId)\n}"
-        },
-        "headers": {
-            "Content-Type": "application/json",
-            "Apollographql-Client-Name": "chegg-web-producers",
-        }
-    }
-    return new Promise((resolve, reject) => {
-        const req = https.request('https://gateway.chegg.com/nestor-graph/graphql', options, (res) => {
-            let data = '';
-
-            res.on('data', (chunk) => {
-                data += chunk;
-            });
-
-            res.on('end', () => {
-                try {
-                    resolve(JSON.parse(data));
-                } catch (error) {
-                    reject(error);
-                }
-            });
-        });
-
-        req.on('error', (error) => {
-            console.error('Error during request:', error);
-            reject(error);
-        });
-        // If there is data to be sent in the request
-        if (options.data) {
-            req.write(JSON.stringify(options.data));
-        }
-        // End the request.
-        req.end();
-    });
-}
-
-module.exports = { "sendMessage": sendMessage, "sendQuestionMessage": sendQuestionMessage, "acceptQuestion": acceptQuestion };
+module.exports = { "sendMessage": sendMessage, "sendQuestionMessage": sendQuestionMessage};
