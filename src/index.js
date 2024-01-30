@@ -86,10 +86,12 @@ setInterval(async () => {
     const queID = data.data.nextQuestionAnsweringAssignment.question.id;  // getID of fetched question
     // Check if queID and lastID are equal
     if(queID == account.lastID){
+        account.updateTimeToCheck(Math.floor(Date.now()/1000)+extraTime);
+        console.log(account.name ,`Waiting for ${extraTime} seconds`);
         continue;
     }
     // If data have a question : send a message by the bot
-    console.log("Got a Question Updating data", data);
+    console.log("Got a Question Updating data");
     account.updateLastID(queID);
     account.updateTimeToCheck(Math.floor(Date.now()/1000)+extraTime);
     // send new question message
@@ -97,9 +99,9 @@ setInterval(async () => {
     // try to accept the Question
     const response = await account.acceptQuestion(); 
     if(response.errors){
-        sendMessage(client, account.name + " Problem in accepting the question");
+        sendMessage(client, "Accepted ❌");
     }else{
-        sendMessage(client, account.name + " Question has been accepted");
+        sendMessage(client, "Accepted ✅");
     }
     } catch (error) {
         console.error('Some error occured:', error);
