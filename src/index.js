@@ -1,7 +1,7 @@
 const { Client, IntentsBitField } = require('discord.js');
 const accountss = require('./accounts');
 const User = require('./user');
-const {sendMessage, sendQuestionMessage} = require('./modules');
+const {sendMessage, sendQuestionMessage, dryRUN} = require('./modules');
 
 require('dotenv').config();
 
@@ -34,6 +34,8 @@ client.on('messageCreate', (msg) => {
     }else if(msg.content === "off" && currHours < 8){
         on = 0;forceOn=0;
         sendMessage(client, "Good Night🛌💤");
+    }else if(msg.channelId == process.env.TestChannelID && msg.content.startsWith("dryRUN")){
+        dryRUN(client);
     }
 });
 

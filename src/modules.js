@@ -1,4 +1,6 @@
 require('dotenv').config();
+const https = require('https');
+const accounts = require('./accounts');
 const {AttachmentBuilder} = require('discord.js');
 // Function to extract text from HTML
 function processHtml(html) {
@@ -42,4 +44,33 @@ const sendQuestionMessage = (client, msg, accountName) => {
     // channel.send("To skip use skip="+accountName);   //TODO
 }
 
-module.exports = { "sendMessage": sendMessage, "sendQuestionMessage": sendQuestionMessage};
+const dryRUN = (client) => {
+    const channel = client.channels.cache.get(process.env.TestChannelID);
+    for(let i = 0;i<accounts.length;i++){
+        const requestOptions = accounts[i].options;
+    const req = https.request('https://gateway.chegg.com/nestor-graph/graphql', requestOptions, (res) => {
+        let data = '';
+        res.on('data', (chunk) => {
+            data += chunk;
+        });
+        
+        res.on('end', () => {
+            channel.send(accounts[i].name);
+            channel.send(data);
+        });
+        });
+
+        req.on('error', (error) => {
+        console.error('Error during DRY RUN:', error);
+        channel.send("Error in request");
+        });
+        // If there is data to be sent in the request
+        if (requestOptions.data) {
+            req.write(JSON.stringify(requestOptions.data));
+        }
+        // End the request.
+        req.end();
+    }
+}
+
+module.exports = { "sendMessage": sendMessage, "sendQuestionMessage": sendQuestionMessage, "dryRUN": dryRUN};
