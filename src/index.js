@@ -1,7 +1,7 @@
 const { Client, IntentsBitField } = require('discord.js');
 const accountss = require('./accounts');
 const User = require('./user');
-const {sendMessage, sendQuestionMessage, dryRUN} = require('./modules');
+const {sendMessage, sendQuestionMessage, dryRUN, sendButtons} = require('./modules');
 
 require('dotenv').config();
 
@@ -13,7 +13,7 @@ const client = new Client({ intents: [
 ] });
 
 const waitTimeSec = 120;
-const extraTime = 10*60;
+const extraTime = 5*120;
 let on = 0;
 let forceOn = 0;
 let msgSent = 0;
@@ -36,15 +36,34 @@ client.on('messageCreate', (msg) => {
         sendMessage(client, "Good Night🛌💤");
     }else if(msg.channelId == process.env.TestChannelID && msg.content.startsWith("dryRUN")){
         dryRUN(client);
+    }else if(msg.channelId == process.env.TestChannelID && msg.content.startsWith("buttons")){
+        sendButtons(msg);
     }
 });
+
 
 const accounts = [];
 
 for(let i = 0;i<accountss.length;i++){
-  const account = new User(accountss[i].name, accountss[i].options, 0, Math.floor(Date.now()/1000));
+    const account = new User(accountss[i].name, accountss[i].options, 0, Math.floor(Date.now()/1000));
   accounts.push(account);
 }
+
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isButton()) return;
+    for(let i = 0;i<accounts.length;i++){
+        let account = accounts[i];
+        if(account.name == interaction.customId){
+            let skipped = account.skipQuestion();
+            if(skipped){
+                interaction.reply("skipped");
+                setTimeout(async ()=>{await interaction.deleteReply()},10*1000)
+            }
+        }
+    }
+  });
+
+// Loop
 
 setInterval(async () => {
     currHours = ((new Date(Date.now())).getHours()+5)%24;

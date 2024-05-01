@@ -1,7 +1,7 @@
 require('dotenv').config();
 const https = require('https');
 const accounts = require('./accounts');
-const {AttachmentBuilder} = require('discord.js');
+const {AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle} = require('discord.js');
 // Function to extract text from HTML
 function processHtml(html) {
     const trimmedString = html.replace(/<\/?[^>]+(>|$)/g, '');
@@ -41,7 +41,6 @@ const sendQuestionMessage = (client, msg, accountName) => {
     }else{
         channel.send(textContent);
     }
-    // channel.send("To skip use skip="+accountName);   //TODO
 }
 
 const dryRUN = (client) => {
@@ -56,7 +55,7 @@ const dryRUN = (client) => {
         
         res.on('end', () => {
             channel.send(accounts[i].name);
-            channel.send(data);
+            channel.send(data.slice(0, 500));
         });
         });
 
@@ -73,4 +72,21 @@ const dryRUN = (client) => {
     }
 }
 
-module.exports = { "sendMessage": sendMessage, "sendQuestionMessage": sendQuestionMessage, "dryRUN": dryRUN};
+const sendButtons = (msg) =>{
+    if(msg.author.bot){return }
+
+    const skip_button = new ButtonBuilder()
+        .setCustomId("Lokesh")
+        .setLabel("Lokesh")
+        .setStyle(ButtonStyle.Danger);
+    const row = new ActionRowBuilder()
+                .addComponents(skip_button);
+
+    const mess = msg.reply({
+        content: "Skip The Question??",
+        components: [row],
+    });
+    mess.then((res)=>{console.log("Buttons Sent");});
+}
+
+module.exports = { "sendMessage": sendMessage, "sendQuestionMessage": sendQuestionMessage, "dryRUN": dryRUN, "sendButtons": sendButtons};

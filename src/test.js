@@ -1,4 +1,4 @@
-const { Client, IntentsBitField } = require('discord.js');
+const { Client, IntentsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle} = require('discord.js');
 const {sendQuestionMessage} = require('./modules');
 
 require('dotenv').config();
@@ -16,13 +16,36 @@ client.on('ready', () => {
 
 client.on('messageCreate', (msg) => {
   if(msg.author.bot){return }
-  // const att = new AttachmentBuilder("https://media.cheggcdn.com/study/e35/e35566c4-9b10-4e75-a77c-aa0c70e9c42a/image", { name: 'image.png' });
 
-  //   msg.channel.send({files: [att]});
+  const skip_button = new ButtonBuilder()
+      .setCustomId("skip")
+      .setLabel("Skip")
+      .setStyle(ButtonStyle.Danger);
+  const skip_button2 = new ButtonBuilder()
+      .setCustomId("skip2")
+      .setLabel("Skip")
+      .setStyle(ButtonStyle.Danger);
+  const solve_button = new ButtonBuilder()
+      .setCustomId("solve")
+      .setLabel("Solve")
+      .setStyle(ButtonStyle.Success);
+  const row = new ActionRowBuilder()
+			.addComponents(skip_button, solve_button, skip_button2);
+
+  const mess = msg.reply({
+    content: "Skip The Question??",
+    components: [row],
+  });
+  mess.then((res)=>{console.log(res);});
 });
 
-const messa = "<div><p>Let </p><code class=\"asciimath\">f_(n)</code><p> be a requence of measurable functions.t show that the set </p><code class=\"asciimath\">E={(x:f_(n)(x)):}</code><p> converges </p></div><div><img src=\"https://media.cheggcdn.com/study/e35/e35566c4-9b10-4e75-a77c-aa0c70e9c42a/image\" /></div>";
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isButton()) return;
+  console.log("clicked");
 
-sendQuestionMessage(client, messa, "test");
+  // if (interaction.customId === 'skip') {
+  //     await interaction.reply('Button clicked!');
+  // }
+});
 
 client.login(process.env.TOKEN); 
