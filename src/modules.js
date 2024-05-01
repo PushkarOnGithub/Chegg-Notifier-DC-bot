@@ -84,15 +84,18 @@ const dryRUN = (client) => {
 }
 
 const sendButtons = (msg) =>{
-    if(msg.author.bot){return }
-    
-    const skip_button = new ButtonBuilder()
-        .setCustomId("Lokesh")
-        .setLabel("Lokesh")
-        .setStyle(ButtonStyle.Danger);
-    const row = new ActionRowBuilder()
-                .addComponents(skip_button);
-
+    if(msg.author.bot){return };
+    // buttons row
+    let row = new ActionRowBuilder();
+                
+    for(let i = 0;i<cookies.length;i++){
+        const skip_button = new ButtonBuilder()
+            .setCustomId(cookies[i].name)
+            .setLabel(cookies[i].name)
+            .setStyle(ButtonStyle.Danger);
+            
+            row.addComponents(skip_button);
+    }
     const mess = msg.reply({
         content: "Skip The Question??",
         components: [row],
