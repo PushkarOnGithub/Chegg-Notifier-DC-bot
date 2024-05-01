@@ -12,12 +12,13 @@ const client = new Client({ intents: [
     IntentsBitField.Flags.MessageContent
 ] });
 
-const waitTimeSec = 120;
+const waitTimeSec = 30;
 const extraTime = 5*60;
+const timeZone = 5;
 let on = 0;
 let forceOn = 0;
 let msgSent = 0;
-let currHours = ((new Date(Date.now())).getHours()+5)%24;
+let currHours = ((new Date(Date.now())).getHours()+timeZone)%24;
 
 client.on('ready', () => {
     console.log(`${client.user.tag} Bot Ready!!`);
@@ -57,8 +58,10 @@ client.on('interactionCreate', async (interaction) => {
             let skipped = account.skipQuestion();
             if(skipped){
                 interaction.reply("skipped");
+                account.updateTimeToCheck((Math.floor(Date.now()/1000)));
                 setTimeout(async ()=>{await interaction.deleteReply()},10*1000)
             }
+            break;
         }
     }
   });
@@ -66,7 +69,7 @@ client.on('interactionCreate', async (interaction) => {
 // Loop
 
 setInterval(async () => {
-    currHours = ((new Date(Date.now())).getHours()+5)%24;
+    currHours = ((new Date(Date.now())).getHours()+timeZone)%24;
     if(currHours>=8 && !on){
         on = 1;
         forceOn = 0;
