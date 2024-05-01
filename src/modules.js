@@ -1,6 +1,6 @@
 require('dotenv').config();
 const https = require('https');
-const accounts = require('./accounts');
+const cookies = require('./cookies');
 const {AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle} = require('discord.js');
 // Function to extract text from HTML
 function processHtml(html) {
@@ -30,7 +30,7 @@ const sendQuestionMessage = (client, msg, accountName) => {
     const textContent = processHtml(msg);
     // get the channel
     const channel = client.channels.cache.get(process.env.ChannelID);
-    channel.send(accountName + " You have a question‼️");
+    // channel.send(accountName + " You have a question‼️");
     // get Image Urls
     const imageUrls = extractImageUrls(msg);
     if(imageUrls.length){
@@ -45,8 +45,19 @@ const sendQuestionMessage = (client, msg, accountName) => {
 
 const dryRUN = (client) => {
     const channel = client.channels.cache.get(process.env.TestChannelID);
-    for(let i = 0;i<accounts.length;i++){
-        const requestOptions = accounts[i].options;
+    for(let i = 0;i<cookies.length;i++){
+        const requestOptions = {
+            "method": "POST",
+            "data":{
+                operationName: 'NextQuestionAnsweringAssignment',
+                variables: {},
+                query: 'query NextQuestionAnsweringAssignment {\n  nextQuestionAnsweringAssignment {\n    question {\n      body\n      id\n      uuid\n      subject {\n        id\n        name\n        subjectGroup {\n          id\n          name\n          __typename\n        }\n        __typename\n      }\n      imageTranscriptionText\n      lastAnswerUuid\n      questionTemplate {\n        templateName\n        templateId\n        __typename\n      }\n      __typename\n    }\n    langTranslation {\n      body\n      translationLanguage\n      __typename\n    }\n    legacyAnswer {\n      id\n      body\n      isStructuredAnswer\n      structuredBody\n      template {\n        id\n        __typename\n      }\n      __typename\n    }\n    questionGeoLocation {\n      countryCode\n      countryName\n      languages\n      __typename\n    }\n    questionRoutingDetails {\n      answeringStartTime\n      bonusCount\n      bonusTimeAllocationEnabled\n      checkAnswerStructureEnabled\n      hasAnsweringStarted\n      questionAssignTime\n      questionSolvingProbability\n      routingType\n      allocationExperimentId\n      questionQualityFactor\n      routingTag\n      __typename\n    }\n    __typename\n  }\n}'
+            },
+            "headers": {
+              "Content-Type": "application/json",
+              "Apollographql-Client-Name": "chegg-web-producers",
+              "Cookie": cookies[i].cookie
+            }};
     const req = https.request('https://gateway.chegg.com/nestor-graph/graphql', requestOptions, (res) => {
         let data = '';
         res.on('data', (chunk) => {
@@ -74,7 +85,7 @@ const dryRUN = (client) => {
 
 const sendButtons = (msg) =>{
     if(msg.author.bot){return }
-
+    
     const skip_button = new ButtonBuilder()
         .setCustomId("Lokesh")
         .setLabel("Lokesh")

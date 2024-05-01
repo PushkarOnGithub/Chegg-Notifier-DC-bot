@@ -1,5 +1,5 @@
 const { Client, IntentsBitField } = require('discord.js');
-const accountss = require('./accounts');
+const cookies = require('./cookies');
 const User = require('./user');
 const {sendMessage, sendQuestionMessage, dryRUN, sendButtons} = require('./modules');
 
@@ -13,7 +13,7 @@ const client = new Client({ intents: [
 ] });
 
 const waitTimeSec = 120;
-const extraTime = 5*120;
+const extraTime = 5*60;
 let on = 0;
 let forceOn = 0;
 let msgSent = 0;
@@ -25,7 +25,7 @@ client.on('ready', () => {
 
 client.on('messageCreate', (msg) => {
     if(msg.author.bot) return;
-    if(msg.content === "hello" || msg.content === "Hello" || msg.content === "Hii" || msg.content === "hii"){
+    if(msg.content === "hello" || msg.content === "Hello" || msg.content === "Hii" || msg.content === "hii" || msg.content == "Hi" || msg.content == "hi"){
         msg.reply("Hey!! How are you Today");
     }
     else if((msg.content === "on" || msg.content === "activate") && 0 < currHours && currHours < 8){
@@ -44,8 +44,8 @@ client.on('messageCreate', (msg) => {
 
 const accounts = [];
 
-for(let i = 0;i<accountss.length;i++){
-    const account = new User(accountss[i].name, accountss[i].options, 0, Math.floor(Date.now()/1000));
+for(let i = 0;i<cookies.length;i++){
+    const account = new User(cookies[i].name, 0, Math.floor(Date.now()/1000), cookies[i].cookie);
   accounts.push(account);
 }
 
@@ -83,50 +83,51 @@ setInterval(async () => {
         sendMessage(client, "Bot is now sleeping, so should you 😴😴\nUse command on/activate to wake it up");
         console.log("sleeping");
     }
+    // if bot is on
     if(on || forceOn){
-  for(let i = 0;i<accounts.length;i++){
-    let account = accounts[i];
-    if(account.timeToCheck >= (Math.floor(Date.now()/1000))){
-        console.log("Continued in ", account.name); // remove
-        continue;
-    }
-    try {
-        let data = await account.fetchDataFromApi()
-    // Check data is fetched if not continue to next account;
-    if(!data){
-        console.log("There is some problem fetching data in ", account.name);
-        continue;
-    }
+    for(let i = 0;i<accounts.length;i++){
+        let account = accounts[i];
+        if(account.timeToCheck >= (Math.floor(Date.now()/1000))){
+            console.log("Continued in ", account.name); // remove
+            continue;
+        }
+        try {
+            let data = await account.fetchDataFromApi()
+        // Check data is fetched if not continue to next account;
+        if(!data){
+            console.log("There is some problem fetching data in ", account.name);
+            continue;
+        }
 
-    // If data don't have a question : continue
-    if (data.errors){
-        console.log( account.name , `Waiting for ${waitTimeSec} seconds...`);
-        // sendMessage(client, account.name + " No Question is there"); // remove
-        continue;
-    }
-    const queID = data.data.nextQuestionAnsweringAssignment.question.id;  // getID of fetched question
-    // Check if queID and lastID are equal
-    if(queID == account.lastID){
+        // If data don't have a question : continue
+        if (data.errors){
+            console.log( account.name , `Waiting for ${waitTimeSec} seconds...`);
+            // sendMessage(client, account.name + " No Question is there"); // remove
+            continue;
+        }
+        const queID = data.data.nextQuestionAnsweringAssignment.question.id;  // getID of fetched question
+        // Check if queID and lastID are equal
+        if(queID == account.lastID){
+            account.updateTimeToCheck(Math.floor(Date.now()/1000)+extraTime);
+            console.log(account.name ,`Waiting for ${extraTime} seconds`);
+            continue;
+        }
+        // If data have a question : send a message by the bot
+        console.log("Got a Question Updating data");
+        account.updateLastID(queID);
         account.updateTimeToCheck(Math.floor(Date.now()/1000)+extraTime);
-        console.log(account.name ,`Waiting for ${extraTime} seconds`);
-        continue;
-    }
-    // If data have a question : send a message by the bot
-    console.log("Got a Question Updating data");
-    account.updateLastID(queID);
-    account.updateTimeToCheck(Math.floor(Date.now()/1000)+extraTime);
-    // send new question message
-    sendQuestionMessage(client, data.data.nextQuestionAnsweringAssignment.question.body, account.name);
-    // try to accept the Question
-    const response = await account.acceptQuestion(); 
-    if(response.errors){
-        sendMessage(client, "Accepted ❌");
-    }else{
-        sendMessage(client, "Accepted ✅");
-    }
-    } catch (error) {
-        console.error('Some error occured:', error);
-    }}
+        // send new question message
+        sendQuestionMessage(client, data.data.nextQuestionAnsweringAssignment.question.body, account.name);
+        // try to accept the Question
+        const response = await account.acceptQuestion(); 
+        if(response.errors){
+            sendMessage(client, "Accepted ❌");
+        // }else{
+        //     sendMessage(client, "Accepted ✅");
+        }
+        } catch (error) {
+            console.error('Some error occured:', error);
+        }}
 }}, waitTimeSec * 1000); // Convert time to milliseconds
 
 

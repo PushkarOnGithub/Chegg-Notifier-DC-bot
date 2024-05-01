@@ -1,16 +1,27 @@
 const https = require('https');
-apiUrl = 'https://gateway.chegg.com/nestor-graph/graphql'; 
+const apiUrl = 'https://gateway.chegg.com/nestor-graph/graphql'; 
 
 class User{
-    constructor(name, options, lastID, timeToCheck){
+    constructor(name, lastID, timeToCheck, cookie){
         this.name = name;
-        this.options = options;
         this.lastID = lastID;
         this.timeToCheck = timeToCheck;
+        this.cookie = cookie;
     }
 
     fetchDataFromApi() {
-      const requestOptions=this.options;
+      const requestOptions={
+        "method": "POST",
+        "data":{
+            operationName: 'NextQuestionAnsweringAssignment',
+            variables: {},
+            query: 'query NextQuestionAnsweringAssignment {\n  nextQuestionAnsweringAssignment {\n    question {\n      body\n      id\n      uuid\n      subject {\n        id\n        name\n        subjectGroup {\n          id\n          name\n          __typename\n        }\n        __typename\n      }\n      imageTranscriptionText\n      lastAnswerUuid\n      questionTemplate {\n        templateName\n        templateId\n        __typename\n      }\n      __typename\n    }\n    langTranslation {\n      body\n      translationLanguage\n      __typename\n    }\n    legacyAnswer {\n      id\n      body\n      isStructuredAnswer\n      structuredBody\n      template {\n        id\n        __typename\n      }\n      __typename\n    }\n    questionGeoLocation {\n      countryCode\n      countryName\n      languages\n      __typename\n    }\n    questionRoutingDetails {\n      answeringStartTime\n      bonusCount\n      bonusTimeAllocationEnabled\n      checkAnswerStructureEnabled\n      hasAnsweringStarted\n      questionAssignTime\n      questionSolvingProbability\n      routingType\n      allocationExperimentId\n      questionQualityFactor\n      routingTag\n      __typename\n    }\n    __typename\n  }\n}'
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "Apollographql-Client-Name": "chegg-web-producers",
+          "Cookie": this.cookie
+        }};
       return new Promise((resolve, reject) => {
         const req = https.request(apiUrl, requestOptions, (res) => {
           let data = '';
@@ -47,7 +58,7 @@ class User{
           "headers": {
               "Content-Type": "application/json",
               "Apollographql-Client-Name": "chegg-web-producers",
-              "Cookie": this.options.headers.Cookie
+              "Cookie": this.cookie
             }
       }
       return new Promise((resolve, reject) => {
@@ -89,7 +100,7 @@ class User{
         "headers": {
             "Content-Type": "application/json",
             "Apollographql-Client-Name": "chegg-web-producers",
-            "Cookie": this.options.headers.Cookie
+            "Cookie": this.cookie
           }
     };
     return new Promise((resolve, reject) => {
