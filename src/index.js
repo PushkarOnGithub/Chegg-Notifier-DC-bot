@@ -12,9 +12,9 @@ const client = new Client({ intents: [
     IntentsBitField.Flags.MessageContent
 ] });
 
-const waitTimeSec = 30;
-const extraTime = 5*60;
-const timeZone = 5;
+const waitTimeSec = 10;
+const extraTime = 10;
+const timeZone = 0;
 let on = 0;
 let forceOn = 0;
 let msgSent = 0;
@@ -59,7 +59,7 @@ client.on('interactionCreate', async (interaction) => {
             if(skipped){
                 interaction.reply("skipped");
                 account.updateTimeToCheck((Math.floor(Date.now()/1000)));
-                setTimeout(async ()=>{await interaction.deleteReply()},10*1000)
+                setTimeout(async ()=>{await interaction.deleteReply()},30*1000);
             }
             break;
         }

@@ -65,7 +65,7 @@ const dryRUN = (client) => {
         });
         
         res.on('end', () => {
-            channel.send(accounts[i].name);
+            channel.send(cookies[i].name);
             channel.send(data.slice(0, 500));
         });
         });

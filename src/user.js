@@ -114,7 +114,8 @@ class User{
         res.on('end', () => {
           try {
             resolve(JSON.parse(data));
-            console.log("skipped");
+            // console.log("skipped");
+            console.log(data);
             return true;
           } catch (error) {
             reject(error);
