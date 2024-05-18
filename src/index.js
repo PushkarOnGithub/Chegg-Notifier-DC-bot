@@ -12,9 +12,9 @@ const client = new Client({ intents: [
     IntentsBitField.Flags.MessageContent
 ] });
 
-const waitTimeSec = 10;
-const extraTime = 10;
-const timeZone = 0;
+const waitTimeSec = 30;
+const extraTime = 2*60;
+const timeZone = 5;
 let on = 0;
 let forceOn = 0;
 let msgSent = 0;
