@@ -1,7 +1,7 @@
 const { Client, IntentsBitField } = require('discord.js');
 const cookies = require('./cookies');
 const User = require('./user');
-const {sendMessage, sendQuestionMessage, dryRUN, sendButtons} = require('./modules');
+const {sendMessage, sendQuestionMessage, dryRUN, sendButtons, getLimit} = require('./modules');
 
 require('dotenv').config();
 
@@ -12,9 +12,11 @@ const client = new Client({ intents: [
     IntentsBitField.Flags.MessageContent
 ] });
 
-const waitTimeSec = 30;
+const waitTimeSec = 10;
 const extraTime = 2*60;
+const wakeTime = 6
 const timeZone = 5;
+let limit = 0
 let on = 0;
 let forceOn = 0;
 let msgSent = 0;
@@ -29,14 +31,17 @@ client.on('messageCreate', (msg) => {
     if(msg.content === "hello" || msg.content === "Hello" || msg.content === "Hii" || msg.content === "hii" || msg.content == "Hi" || msg.content == "hi"){
         msg.reply("Hey!! How are you Today");
     }
-    else if((msg.content === "on" || msg.content === "activate") && 0 < currHours && currHours < 8){
+    else if((msg.content === "on" || msg.content === "activate") && 0 < currHours && currHours < wakeTime){
         forceOn = 1;
         sendMessage(client, "Hello Night Owl !!! I'm awake");
-    }else if(msg.content === "off" && currHours < 8){
+    }else if(msg.content === "off" && currHours < wakeTime){
         on = 0;forceOn=0;
         sendMessage(client, "Good Night🛌💤");
     }else if(msg.channelId == process.env.TestChannelID && msg.content.startsWith("dryRUN")){
         dryRUN(client);
+        setTimeout(() => {
+            sendButtons(msg);
+        }, 2000);
     }else if(msg.channelId == process.env.TestChannelID && msg.content.startsWith("buttons")){
         sendButtons(msg);
     }
@@ -70,16 +75,25 @@ client.on('interactionCreate', async (interaction) => {
 
 setInterval(async () => {
     currHours = ((new Date(Date.now())).getHours()+timeZone)%24;
-    if(currHours>=8 && !on){
+    if (currHours == 9){
+        const limitData = await getLimit();
+        const newLimit = limitData.data.expertAnsweringLimit.currentLimit;
+        if (limit != newLimit){
+            sendMessage(client, "❗❗ Attention ❗❗")
+            sendMessage(client, `Limit Changed to : ${newLimit}`)
+            limit = newLimit;
+        }
+    }
+    if(currHours>=wakeTime && !on){
         on = 1;
         forceOn = 0;
         msgSent = 0;
-        if(currHours==8){
+        if(currHours==wakeTime){
             sendMessage(client, "Morning buddies, let's get to work!!")
             console.log("morning");
         };
     }
-    else if(0 < currHours && currHours < 8 && !forceOn & !msgSent){
+    else if(0 < currHours && currHours < wakeTime && !forceOn & !msgSent){
         on = 0;
         forceOn = 0;
         msgSent = 1;

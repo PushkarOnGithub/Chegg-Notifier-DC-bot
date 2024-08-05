@@ -96,7 +96,7 @@ class User{
       }
       const requestOptions={
         "method": "POST",
-        "data": {operationName:"SkipQuestionAssignment",variables:{"questionId":this.lastID,"skipPageFlow":"ANSWERING","newSkipReason":{"primaryReason":"01","secondaryReason":""}},query:"mutation SkipQuestionAssignment($questionId: Long!, $skipPageFlow: QnaCurrentPageFlow!, $skipPrimaryReason: QuestionSkipPrimaryReasons, $newSkipReason: QuestionNewSkipReasons) {\n  skipQuestionAssignment(\n    questionId: $questionId\n    skipPageFlow: $skipPageFlow\n    skipPrimaryReason: $skipPrimaryReason\n    newSkipReason: $newSkipReason\n  ) {\n    message\n    questionId\n    __typename\n  }\n}"},
+        "data": {operationName:"SkipQuestionAssignment",variables:{"questionId":this.lastID,"skipPageFlow":"ANSWERING","newSkipReason":{"primaryReason":"020","secondaryReason":""}},query:"mutation SkipQuestionAssignment($questionId: Long!, $skipPageFlow: QnaCurrentPageFlow!, $skipPrimaryReason: QuestionSkipPrimaryReasons, $newSkipReason: QuestionNewSkipReasons) {\n  skipQuestionAssignment(\n    questionId: $questionId\n    skipPageFlow: $skipPageFlow\n    skipPrimaryReason: $skipPrimaryReason\n    newSkipReason: $newSkipReason\n  ) {\n    message\n    questionId\n    __typename\n  }\n}"},
         "headers": {
             "Content-Type": "application/json",
             "Apollographql-Client-Name": "chegg-web-producers",

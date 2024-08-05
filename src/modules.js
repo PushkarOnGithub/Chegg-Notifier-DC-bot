@@ -27,7 +27,6 @@ const sendMessage = (client, msg) => {
 }
 
 const sendQuestionMessage = (client, msg, accountName) => {
-    const textContent = processHtml(msg);
     // get the channel
     const channel = client.channels.cache.get(process.env.ChannelID);
     // channel.send(accountName + " You have a question‼️");
@@ -39,6 +38,7 @@ const sendQuestionMessage = (client, msg, accountName) => {
             channel.send({files: [att]});
         }
     }else{
+        const textContent = processHtml(msg);
         channel.send(textContent);
     }
 }
@@ -82,7 +82,50 @@ const dryRUN = (client) => {
         req.end();
     }
 }
-
+function getLimit() {
+    const requestOptions={
+      "method": "POST",
+      "data": {operationName:"ExpertAnsweringLimit",variables:{},query:"query ExpertAnsweringLimit {\n  expertAnsweringLimit {\n    currentLimit\n    previousLimit\n    __typename\n  }\n}"},
+      "headers": {
+          "Content-Type": "application/json",
+          "Apollographql-Client-Name": "chegg-web-producers",
+          "Cookie": cookies[0].cookie
+        }
+  };
+  return new Promise((resolve, reject) => {
+    const req = https.request('https://gateway.chegg.com/nestor-graph/graphql', requestOptions, (res) => {
+      let data = '';
+  
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+  
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(data));
+          // console.log("skipped");
+          console.log(data);
+          return true;
+        } catch (error) {
+          reject(error);
+          return false;
+        }
+      });
+    });
+  
+    req.on('error', (error) => {
+      console.error('Error during skipping:', error);
+      reject(error);
+      return false;
+    });
+    // If there is data to be sent in the request
+    if (requestOptions.data) {
+        req.write(JSON.stringify(requestOptions.data));
+      }
+    // End the request.
+    req.end();
+  });
+  }
 const sendButtons = (msg) =>{
     if(msg.author.bot){return };
     // buttons row
@@ -103,4 +146,4 @@ const sendButtons = (msg) =>{
     mess.then((res)=>{console.log("Buttons Sent");});
 }
 
-module.exports = { "sendMessage": sendMessage, "sendQuestionMessage": sendQuestionMessage, "dryRUN": dryRUN, "sendButtons": sendButtons};
+module.exports = { sendMessage, sendQuestionMessage, dryRUN, sendButtons, getLimit};
