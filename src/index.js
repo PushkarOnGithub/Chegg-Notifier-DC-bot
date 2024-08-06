@@ -12,7 +12,7 @@ const client = new Client({ intents: [
     IntentsBitField.Flags.MessageContent
 ] });
 
-const waitTimeSec = 10;
+const waitTimeSec = 30;
 const extraTime = 2*60;
 const wakeTime = 6
 const timeZone = 5;
@@ -75,7 +75,7 @@ client.on('interactionCreate', async (interaction) => {
 
 setInterval(async () => {
     currHours = ((new Date(Date.now())).getHours()+timeZone)%24;
-    if (currHours == 9){
+    if (currHours == 3){
         const limitData = await getLimit();
         const newLimit = limitData.data.expertAnsweringLimit.currentLimit;
         if (limit != newLimit){
