@@ -29,7 +29,7 @@ const sendMessage = (client, msg) => {
 const sendQuestionMessage = (client, msg, accountName) => {
     // get the channel
     const channel = client.channels.cache.get(process.env.ChannelID);
-    // channel.send(accountName + " You have a question‼️");
+    channel.send(accountName); // specify the account
     // get Image Urls
     const imageUrls = extractImageUrls(msg);
     if(imageUrls.length){

@@ -75,7 +75,7 @@ client.on('interactionCreate', async (interaction) => {
 
 setInterval(async () => {
     currHours = ((new Date(Date.now())).getHours()+timeZone)%24;
-    if (currHours == 3){
+    if (currHours == 14){  // time to check for limit changes 2.30 PM
         const limitData = await getLimit();
         const newLimit = limitData.data.expertAnsweringLimit.currentLimit;
         if (limit != newLimit){
