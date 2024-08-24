@@ -1,7 +1,7 @@
 const { Client, IntentsBitField } = require('discord.js');
 const cookies = require('./cookies');
 const User = require('./user');
-const {sendMessage, sendQuestionMessage, dryRUN, sendButtons, getLimit} = require('./modules');
+const {sendMessage, sendQuestionMessage, dryRUN, sendButtons} = require('./modules');
 
 require('dotenv').config();
 
@@ -16,7 +16,6 @@ const waitTimeSec = 30;
 const extraTime = 2*60;
 const wakeTime = 6
 const timeZone = 5;
-let limit = 0
 let on = 0;
 let forceOn = 0;
 let msgSent = 0;
@@ -75,15 +74,7 @@ client.on('interactionCreate', async (interaction) => {
 
 setInterval(async () => {
     currHours = ((new Date(Date.now())).getHours()+timeZone)%24;
-    if (currHours == 14){  // time to check for limit changes 2.30 PM
-        const limitData = await getLimit();
-        const newLimit = limitData.data.expertAnsweringLimit.currentLimit;
-        if (limit != newLimit){
-            sendMessage(client, "❗❗ Attention ❗❗")
-            sendMessage(client, `Limit Changed to : ${newLimit}`)
-            limit = newLimit;
-        }
-    }
+    
     if(currHours>=wakeTime && !on){
         on = 1;
         forceOn = 0;
@@ -102,8 +93,16 @@ setInterval(async () => {
     }
     // if bot is on
     if(on || forceOn){
-    for(let i = 0;i<accounts.length;i++){
-        let account = accounts[i];
+    for(let account of accounts){
+        if (currHours == 14){  // time to check for limit changes 2.30 PM
+            const limitData = await account.getLimit();
+            const newLimit = limitData.data.expertAnsweringLimit.currentLimit;
+            if (account.limit != newLimit){
+                account.updateLimit(newLimit);
+                sendMessage(client, "❗❗ Attention ❗❗");
+                sendMessage(client, `${account.name} Limit Changed to : ${newLimit}`);
+            }
+        }
         if(account.timeToCheck >= (Math.floor(Date.now()/1000))){
             console.log("Continued in ", account.name); // remove
             continue;
@@ -144,7 +143,9 @@ setInterval(async () => {
         }
         } catch (error) {
             console.error('Some error occured:', error);
-        }}
+        }
+        
+    }
 }}, waitTimeSec * 1000); // Convert time to milliseconds
 
 

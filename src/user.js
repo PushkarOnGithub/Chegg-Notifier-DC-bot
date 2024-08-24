@@ -7,6 +7,7 @@ class User{
         this.lastID = lastID;
         this.timeToCheck = timeToCheck;
         this.cookie = cookie;
+        this.limit = 10;
     }
 
     fetchDataFromApi() {
@@ -136,6 +137,53 @@ class User{
       // End the request.
       req.end();
     });
+    }
+    getLimit() {
+      const requestOptions={
+        "method": "POST",
+        "data": {operationName:"ExpertAnsweringLimit",variables:{},query:"query ExpertAnsweringLimit {\n  expertAnsweringLimit {\n    currentLimit\n    previousLimit\n    __typename\n  }\n}"},
+        "headers": {
+            "Content-Type": "application/json",
+            "Apollographql-Client-Name": "chegg-web-producers",
+            "Cookie": this.cookie
+          }
+    };
+    return new Promise((resolve, reject) => {
+      const req = https.request('https://gateway.chegg.com/nestor-graph/graphql', requestOptions, (res) => {
+        let data = '';
+    
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+    
+        res.on('end', () => {
+          try {
+            resolve(JSON.parse(data));
+            // console.log("skipped");
+            console.log(data);
+            return true;
+          } catch (error) {
+            reject(error);
+            return false;
+          }
+        });
+      });
+    
+      req.on('error', (error) => {
+        console.error('Error during skipping:', error);
+        reject(error);
+        return false;
+      });
+      // If there is data to be sent in the request
+      if (requestOptions.data) {
+          req.write(JSON.stringify(requestOptions.data));
+        }
+      // End the request.
+      req.end();
+    });
+    }
+    updateLimit(newLimit){
+      this.limit = newLimit;
     }
     updateLastID(newID){
       this.lastID = newID;
