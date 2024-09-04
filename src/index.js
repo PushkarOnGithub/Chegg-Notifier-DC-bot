@@ -16,7 +16,7 @@ const waitTimeSec = 30;
 const extraTime = 2*60;
 const wakeTime = 6
 const timeZone = 5;
-let on = 0;
+let on = 1;
 let forceOn = 0;
 let msgSent = 0;
 let currHours = ((new Date(Date.now())).getHours()+timeZone)%24;
@@ -27,20 +27,22 @@ client.on('ready', () => {
 
 client.on('messageCreate', (msg) => {
     if(msg.author.bot) return;
+    // if msg is not from correct instance of bot -> return
+    if(!(msg.channelId == process.env.TestChannelID || msg.channelId == process.env.channelId)) return;
     if(msg.content === "hello" || msg.content === "Hello" || msg.content === "Hii" || msg.content === "hii" || msg.content == "Hi" || msg.content == "hi"){
         msg.reply("Hey!! How are you Today");
     }
     else if((msg.content === "on" || msg.content === "activate") && 0 < currHours && currHours < wakeTime){
         forceOn = 1;
-        sendMessage(client, "Hello Night Owl !!! I'm awake");
+        msg.reply("Hello Night Owl !!! I'm awake");
     }else if(msg.content === "off" && currHours < wakeTime){
         on = 0;forceOn=0;
-        sendMessage(client, "Good Night🛌💤");
+        msg.reply("Good Night🛌💤");
     }else if(msg.channelId == process.env.TestChannelID && msg.content.startsWith("dryRUN")){
         dryRUN(client);
         setTimeout(() => {
             sendButtons(msg);
-        }, 2000);
+        }, 3000);
     }else if(msg.channelId == process.env.TestChannelID && msg.content.startsWith("buttons")){
         sendButtons(msg);
     }
@@ -49,15 +51,14 @@ client.on('messageCreate', (msg) => {
 
 const accounts = [];
 
-for(let i = 0;i<cookies.length;i++){
-    const account = new User(cookies[i].name, 0, Math.floor(Date.now()/1000), cookies[i].cookie);
-  accounts.push(account);
+for(let cookie of cookies){
+    const account = new User(cookie.name, 0, Math.floor(Date.now()/1000), cookie.cookie);
+    accounts.push(account);
 }
 
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isButton()) return;
-    for(let i = 0;i<accounts.length;i++){
-        let account = accounts[i];
+    for(let account of accounts){
         if(account.name == interaction.customId){
             let skipped = account.skipQuestion();
             if(skipped){
