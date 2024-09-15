@@ -1,6 +1,5 @@
 require('dotenv').config();
 const https = require('https');
-const cookies = require('./cookies');
 const {AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle} = require('discord.js');
 // Function to extract text from HTML
 function processHtml(html) {
@@ -21,8 +20,8 @@ function extractImageUrls(html) {
     return matches;
 }
 
-const sendMessage = (client, msg) => {
-    const channel = client.channels.cache.get(process.env.ChannelID);
+const sendMessage = (client, msg, channelId) => {
+    const channel = client.channels.cache.get(channelId);
     channel.send(msg);
 }
 
@@ -43,9 +42,9 @@ const sendQuestionMessage = (client, msg, accountName) => {
     }
 }
 
-const dryRUN = (client) => {
+const dryRUN = (client, cookies) => {
     const channel = client.channels.cache.get(process.env.TestChannelID);
-    for(let i = 0;i<cookies.length;i++){
+    for(let cookie of cookies){
         const requestOptions = {
             "method": "POST",
             "data":{
@@ -56,7 +55,7 @@ const dryRUN = (client) => {
             "headers": {
               "Content-Type": "application/json",
               "Apollographql-Client-Name": "chegg-web-producers",
-              "Cookie": cookies[i].cookie
+              "Cookie": cookie.cookie
             }};
     const req = https.request('https://gateway.chegg.com/nestor-graph/graphql', requestOptions, (res) => {
         let data = '';
@@ -65,7 +64,7 @@ const dryRUN = (client) => {
         });
         
         res.on('end', () => {
-            channel.send(cookies[i].name);
+            channel.send(cookie.name);
             channel.send(data.slice(0, 500));
         });
         });
@@ -83,15 +82,15 @@ const dryRUN = (client) => {
     }
 }
 
-const sendButtons = (msg) =>{
+const sendButtons = (msg, cookies) =>{
     if(msg.author.bot){return };
     // buttons row
     let row = new ActionRowBuilder();
                 
-    for(let i = 0;i<cookies.length;i++){
+    for(let cookie of cookies){
         const skip_button = new ButtonBuilder()
-            .setCustomId(cookies[i].name)
-            .setLabel(cookies[i].name)
+            .setCustomId(cookie.name)
+            .setLabel(cookie.name)
             .setStyle(ButtonStyle.Danger);
             
             row.addComponents(skip_button);

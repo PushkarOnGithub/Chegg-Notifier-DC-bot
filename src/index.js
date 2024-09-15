@@ -40,20 +40,20 @@ client.on('messageCreate', (msg) => {
         on = 0;forceOn=0;
         msg.reply("Good Night🛌💤");
     }else if(msg.content.startsWith("dryRUN") && (msg.author.id === "829800422633242644" || msg.author.id === "1098539236464017469")){
-        dryRUN(client);
+        dryRUN(client, cookies);
         setTimeout(() => {
-            sendButtons(msg);
+            sendButtons(msg, cookies);
         }, 10000);
     }else if(msg.channelId == process.env.TestChannelID && msg.content.startsWith("buttons")){
         sendButtons(msg);
     }
 });
 
-
+let cookies = [];
 const accounts = [];
 
 const updateCookies = async () => {
-    const cookies = await getData();
+    cookies = await getData();
     for(let cookie of cookies){
         const account = new User(cookie.name, 0, Math.floor(Date.now()/1000), cookie.cookie);
         accounts.push(account);
