@@ -1,7 +1,7 @@
 const { Client, IntentsBitField } = require('discord.js');
-const cookies = require('./cookies');
 const User = require('./user');
 const {sendMessage, sendQuestionMessage, dryRUN, sendButtons} = require('./modules');
+const { getData } = require('./firebase');
 
 require('dotenv').config();
 
@@ -23,6 +23,7 @@ let currHours = ((new Date(Date.now())).getHours()+timeZone)%24;
 
 client.on('ready', () => {
     console.log(`${client.user.tag} Bot Ready!!`);
+    updateCookies();
 });
 
 client.on('messageCreate', (msg) => {
@@ -38,11 +39,11 @@ client.on('messageCreate', (msg) => {
     }else if(msg.content === "off" && currHours < wakeTime){
         on = 0;forceOn=0;
         msg.reply("Good Night🛌💤");
-    }else if(msg.channelId == process.env.TestChannelID && msg.content.startsWith("dryRUN")){
+    }else if(msg.content.startsWith("dryRUN") && (msg.author.id === "829800422633242644" || msg.author.id === "1098539236464017469")){
         dryRUN(client);
         setTimeout(() => {
             sendButtons(msg);
-        }, 3000);
+        }, 10000);
     }else if(msg.channelId == process.env.TestChannelID && msg.content.startsWith("buttons")){
         sendButtons(msg);
     }
@@ -51,9 +52,13 @@ client.on('messageCreate', (msg) => {
 
 const accounts = [];
 
-for(let cookie of cookies){
-    const account = new User(cookie.name, 0, Math.floor(Date.now()/1000), cookie.cookie);
-    accounts.push(account);
+const updateCookies = async () => {
+    const cookies = await getData();
+    for(let cookie of cookies){
+        const account = new User(cookie.name, 0, Math.floor(Date.now()/1000), cookie.cookie);
+        accounts.push(account);
+    }
+    console.log("cookies changed");
 }
 
 client.on('interactionCreate', async (interaction) => {
@@ -74,6 +79,9 @@ client.on('interactionCreate', async (interaction) => {
 // Loop
 
 setInterval(async () => {
+    if ((new Date(Date.now())).getMinutes() === 0){
+        updateCookies();
+    }
     currHours = ((new Date(Date.now())).getHours()+timeZone)%24;
     
     if(currHours>=wakeTime && !on){

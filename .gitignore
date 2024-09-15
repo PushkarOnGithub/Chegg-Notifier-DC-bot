@@ -2,4 +2,6 @@ tempcodefile.js
 test.js
 test2.js
 .env
+cookies.js
 node_modules/
+firebaseCreds.js
