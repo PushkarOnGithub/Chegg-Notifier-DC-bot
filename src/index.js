@@ -39,7 +39,7 @@ client.on('messageCreate', (msg) => {
     }else if(msg.content === "off" && currHours < wakeTime){
         on = 0;forceOn=0;
         msg.reply("Good Night🛌💤");
-    }else if(msg.content.startsWith("dryRUN") && (msg.author.id === "829800422633242644" || msg.author.id === "1098539236464017469")){
+    }else if(msg.content.startsWith("dryRUN") && msg.channelId == process.env.TestChannelID && (msg.author.id === "829800422633242644" || msg.author.id === "1098539236464017469")){
         dryRUN(client, cookies);
         setTimeout(() => {
             sendButtons(msg, cookies);
@@ -50,15 +50,22 @@ client.on('messageCreate', (msg) => {
 });
 
 let cookies = [];
-const accounts = [];
+let accounts = [];
 
 const updateCookies = async () => {
     cookies = await getData();
-    for(let cookie of cookies){
-        const account = new User(cookie.name, 0, Math.floor(Date.now()/1000), cookie.cookie);
-        accounts.push(account);
+    if (accounts.length == 0){
+        for(let cookie of cookies){
+            const account = new User(cookie.name, 0, Math.floor(Date.now()/1000), cookie.cookie);
+            accounts.push(account);
+        }
+        console.log("Accounts Initialised")
+    }else{
+        for(let i = 0;i<accounts.length;i++){
+            accounts[i].cookie = cookies[i].cookie;
+        }
+        console.log("cookies changed");
     }
-    console.log("cookies changed");
 }
 
 client.on('interactionCreate', async (interaction) => {

@@ -20,8 +20,8 @@ function extractImageUrls(html) {
     return matches;
 }
 
-const sendMessage = (client, msg, channelId) => {
-    const channel = client.channels.cache.get(channelId);
+const sendMessage = (client, msg) => {
+    const channel = client.channels.cache.get(process.env.ChannelID);
     channel.send(msg);
 }
 
