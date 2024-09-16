@@ -78,6 +78,7 @@ client.on('interactionCreate', async (interaction) => {
                 for(let id of account.lastMessageIDs){
                     client.channels.cache.get(process.env.channelID).bulkDelete(account.lastMessageIDs);
                 }
+                account.updateLastMessageID([]);
                 account.updateTimeToCheck((Math.floor(Date.now()/1000)));
                 setTimeout(async ()=>{await interaction.deleteReply()},30*1000);
             }
