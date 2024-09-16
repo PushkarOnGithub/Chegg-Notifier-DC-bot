@@ -2,12 +2,13 @@ const https = require('https');
 const apiUrl = 'https://gateway.chegg.com/nestor-graph/graphql'; 
 
 class User{
-    constructor(name, lastID, timeToCheck, cookie){
+    constructor(name, cookie, lastID=0,timeToCheck = 0,limit=10, lastMessageIDs=[]){
         this.name = name;
         this.lastID = lastID;
         this.timeToCheck = timeToCheck;
         this.cookie = cookie;
-        this.limit = 10;
+        this.limit = limit;
+        this.lastMessageIDs = lastMessageIDs;
     }
 
     fetchDataFromApi() {
@@ -190,6 +191,9 @@ class User{
     }
     updateTimeToCheck(newTime){
       this.timeToCheck = newTime;
+    }
+    updateLastMessageID(lastMessageIDs){
+      this.lastMessageIDs = lastMessageIDs;
     }
 }
 

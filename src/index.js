@@ -56,7 +56,7 @@ const updateCookies = async () => {
     cookies = await getData();
     if (accounts.length == 0){
         for(let cookie of cookies){
-            const account = new User(cookie.name, 0, Math.floor(Date.now()/1000), cookie.cookie);
+            const account = new User(cookie.name, cookie.cookie, 0, 0, 50);
             accounts.push(account);
         }
         console.log("Accounts Initialised")
@@ -75,6 +75,9 @@ client.on('interactionCreate', async (interaction) => {
             let skipped = account.skipQuestion();
             if(skipped){
                 interaction.reply("skipped");
+                for(let id of account.lastMessageIDs){
+                    client.channels.cache.get(process.env.channelID).bulkDelete(account.lastMessageIDs);
+                }
                 account.updateTimeToCheck((Math.floor(Date.now()/1000)));
                 setTimeout(async ()=>{await interaction.deleteReply()},30*1000);
             }
@@ -149,11 +152,12 @@ setInterval(async () => {
         account.updateLastID(queID);
         account.updateTimeToCheck(Math.floor(Date.now()/1000)+extraTime);
         // send new question message
-        sendQuestionMessage(client, data.data.nextQuestionAnsweringAssignment.question.body, account.name);
+        const lastMessageIDs = sendQuestionMessage(client, data.data.nextQuestionAnsweringAssignment.question.body, account.name);
+        account.updateLastMessageID(lastMessageIDs);
         // try to accept the Question
         const response = await account.acceptQuestion(); 
         if(response.errors){
-            sendMessage(client, "Accepted ❌");
+            // sendMessage(client, "Accepted ❌");
         // }else{
         //     sendMessage(client, "Accepted ✅");
         }
