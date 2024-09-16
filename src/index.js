@@ -138,22 +138,23 @@ setInterval(async () => {
         // If data don't have a question : continue
         if (data.errors){
             console.log( account.name , `Waiting for ${waitTimeSec} seconds...`);
+            account.updateLastMessageID([]);
             // sendMessage(client, account.name + " No Question is there"); // remove
             continue;
         }
-        const queID = data.data.nextQuestionAnsweringAssignment.question.id;  // getID of fetched question
+        const que = data.data.nextQuestionAnsweringAssignment.question;  // get fetched question
         // Check if queID and lastID are equal
-        if(queID == account.lastID){
+        if(que.id == account.lastID){
             account.updateTimeToCheck(Math.floor(Date.now()/1000)+extraTime);
             console.log(account.name ,`Waiting for ${extraTime} seconds`);
             continue;
         }
         // If data have a question : send a message by the bot
         console.log("Got a Question Updating data");
-        account.updateLastID(queID);
+        account.updateLastID(que.id);
         account.updateTimeToCheck(Math.floor(Date.now()/1000)+extraTime);
         // send new question message
-        const lastMessageIDs = sendQuestionMessage(client, data.data.nextQuestionAnsweringAssignment.question.body, account.name);
+        const lastMessageIDs = sendQuestionMessage(client, que.body, account.name);
         account.updateLastMessageID(lastMessageIDs);
         // try to accept the Question
         const response = await account.acceptQuestion(); 
