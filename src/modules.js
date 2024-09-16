@@ -26,14 +26,14 @@ function extractImageUrls(html) {
 }
 
 const sendMessage = (client, msg) => {
-  const channel = client.channels.cache.get(process.env.ChannelID);
+  const channel = client.channels.cache.get(process.env.channelId);
   channel.send(msg);
 };
 
 const sendQuestionMessage = (client, msg, accountName) => {
   const messageIDs = [];
   // get the channel
-  const channel = client.channels.cache.get(process.env.ChannelID);
+  const channel = client.channels.cache.get(process.env.channelId);
   channel.send(accountName).then((sentMessage) => {
     messageIDs.push(sentMessage);
   });
@@ -56,7 +56,7 @@ const sendQuestionMessage = (client, msg, accountName) => {
 };
 
 const dryRUN = (client, cookies) => {
-  const channel = client.channels.cache.get(process.env.TestChannelID);
+  const channel = client.channels.cache.get(process.env.testChannelId);
   for (let cookie of cookies) {
     const requestOptions = {
       method: "POST",

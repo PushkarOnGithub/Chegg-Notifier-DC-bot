@@ -29,7 +29,7 @@ client.on('ready', () => {
 client.on('messageCreate', (msg) => {
     if(msg.author.bot) return;
     // if msg is not from correct instance of bot -> return
-    if(!(msg.channelId == process.env.TestChannelID || msg.channelId == process.env.channelId)) return;
+    if(!(msg.channelId === process.env.testChannelId || msg.channelId === process.env.channelId)) return;
     if(msg.content === "hello" || msg.content === "Hello" || msg.content === "Hii" || msg.content === "hii" || msg.content == "Hi" || msg.content == "hi"){
         msg.reply("Hey!! How are you Today");
     }
@@ -39,12 +39,12 @@ client.on('messageCreate', (msg) => {
     }else if(msg.content === "off" && currHours < wakeTime){
         on = 0;forceOn=0;
         msg.reply("Good Night🛌💤");
-    }else if(msg.content.startsWith("dryRUN") && msg.channelId == process.env.TestChannelID && (msg.author.id === "829800422633242644" || msg.author.id === "1098539236464017469")){
+    }else if(msg.content.startsWith("dryRUN") && msg.channelId == process.env.testChannelId && (msg.author.id === "829800422633242644" || msg.author.id === "1098539236464017469")){
         dryRUN(client, cookies);
         setTimeout(() => {
             sendButtons(msg, cookies);
         }, 10000);
-    }else if(msg.channelId == process.env.TestChannelID && msg.content.startsWith("buttons")){
+    }else if(msg.channelId == process.env.testChannelId && msg.content.startsWith("buttons")){
         sendButtons(msg);
     }
 });
@@ -74,13 +74,11 @@ client.on('interactionCreate', async (interaction) => {
         if(account.name == interaction.customId){
             let skipped = account.skipQuestion();
             if(skipped){
-                interaction.reply("skipped");
-                for(let id of account.lastMessageIDs){
-                    client.channels.cache.get(process.env.channelID).bulkDelete(account.lastMessageIDs);
-                }
+                interaction.reply(`${account.name} : skipped`);
+                client.channels.cache.get(process.env.channelId).bulkDelete(account.lastMessageIDs);
                 account.updateLastMessageID([]);
                 account.updateTimeToCheck((Math.floor(Date.now()/1000)));
-                setTimeout(async ()=>{await interaction.deleteReply()},30*1000);
+                setTimeout(async ()=>{await interaction.deleteReply()},60*1000);
             }
             break;
         }
