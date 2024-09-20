@@ -1,200 +1,134 @@
-const https = require('https');
-const apiUrl = 'https://gateway.chegg.com/nestor-graph/graphql'; 
+const apiUrl = "https://gateway.chegg.com/nestor-graph/graphql";
 
-class User{
-    constructor(name, cookie, lastID=0,timeToCheck = 0,limit=10, lastMessageIDs=[]){
-        this.name = name;
-        this.lastID = lastID;
-        this.timeToCheck = timeToCheck;
-        this.cookie = cookie;
-        this.limit = limit;
-        this.lastMessageIDs = lastMessageIDs;
+class User {
+  constructor(
+    _name,
+    _cookie,
+    _lastQuestionId = 0,
+    _timeToCheck = 0,
+    _limit = 50,
+    _lastMessages = []
+  ) {
+    this.name = _name;
+    this.cookie = _cookie;
+    this.lastQuestionId = _lastQuestionId;
+    this.timeToCheck = _timeToCheck;
+    this.limit = _limit;
+    this.lastMessages = _lastMessages;
+  }
+
+  async fetchDataFromApi() {
+    const requestOptions = {
+      method: "POST",
+      body: JSON.stringify({
+        operationName: "NextQuestionAnsweringAssignment",
+        variables: {},
+        query:
+          "query NextQuestionAnsweringAssignment {\n  nextQuestionAnsweringAssignment {\n    question {\n      body\n      id\n      uuid\n      subject {\n        id\n        name\n        subjectGroup {\n          id\n          name\n          __typename\n        }\n        __typename\n      }\n      imageTranscriptionText\n      lastAnswerUuid\n      questionTemplate {\n        templateName\n        templateId\n        __typename\n      }\n      __typename\n    }\n    langTranslation {\n      body\n      translationLanguage\n      __typename\n    }\n    legacyAnswer {\n      id\n      body\n      isStructuredAnswer\n      structuredBody\n      template {\n        id\n        __typename\n      }\n      __typename\n    }\n    questionGeoLocation {\n      countryCode\n      countryName\n      languages\n      __typename\n    }\n    questionRoutingDetails {\n      answeringStartTime\n      bonusCount\n      bonusTimeAllocationEnabled\n      checkAnswerStructureEnabled\n      hasAnsweringStarted\n      questionAssignTime\n      questionSolvingProbability\n      routingType\n      allocationExperimentId\n      questionQualityFactor\n      routingTag\n      __typename\n    }\n    __typename\n  }\n}",
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        "Apollographql-Client-Name": "chegg-web-producers",
+        Cookie: this.cookie,
+      },
+    };
+    try {
+      const res = await fetch(apiUrl, requestOptions);
+      const data = await res.json();
+      return data;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  async acceptQuestion() {
+    const requestOptions = {
+      method: "POST",
+      body: JSON.stringify({
+        operationName: "StartQuestionAnswering",
+        variables: { questionId: this.lastQuestionId },
+        query:
+          "mutation StartQuestionAnswering($questionId: Long!) {\n  startQuestionAnswering(questionId: $questionId)\n}",
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        "Apollographql-Client-Name": "chegg-web-producers",
+        Cookie: this.cookie,
+      },
+    };
+    try {
+      const res = await fetch(apiUrl, requestOptions);
+      const data = await res.json();
+      return data;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  async skipQuestion() {
+    if (this.timeToCheck < Math.floor(Date.now() / 1000)) {
+      return false;
     }
 
-    fetchDataFromApi() {
-      const requestOptions={
-        "method": "POST",
-        "data":{
-            operationName: 'NextQuestionAnsweringAssignment',
-            variables: {},
-            query: 'query NextQuestionAnsweringAssignment {\n  nextQuestionAnsweringAssignment {\n    question {\n      body\n      id\n      uuid\n      subject {\n        id\n        name\n        subjectGroup {\n          id\n          name\n          __typename\n        }\n        __typename\n      }\n      imageTranscriptionText\n      lastAnswerUuid\n      questionTemplate {\n        templateName\n        templateId\n        __typename\n      }\n      __typename\n    }\n    langTranslation {\n      body\n      translationLanguage\n      __typename\n    }\n    legacyAnswer {\n      id\n      body\n      isStructuredAnswer\n      structuredBody\n      template {\n        id\n        __typename\n      }\n      __typename\n    }\n    questionGeoLocation {\n      countryCode\n      countryName\n      languages\n      __typename\n    }\n    questionRoutingDetails {\n      answeringStartTime\n      bonusCount\n      bonusTimeAllocationEnabled\n      checkAnswerStructureEnabled\n      hasAnsweringStarted\n      questionAssignTime\n      questionSolvingProbability\n      routingType\n      allocationExperimentId\n      questionQualityFactor\n      routingTag\n      __typename\n    }\n    __typename\n  }\n}'
+    const requestOptions = {
+      method: "POST",
+      body: JSON.stringify({
+        operationName: "SkipQuestionAssignment",
+        variables: {
+          questionId: this.lastQuestionId,
+          skipPageFlow: "ANSWERING",
+          newSkipReason: { primaryReason: "020", secondaryReason: "" },
         },
-        "headers": {
-          "Content-Type": "application/json",
-          "Apollographql-Client-Name": "chegg-web-producers",
-          "Cookie": this.cookie
-        }};
-      return new Promise((resolve, reject) => {
-        const req = https.request(apiUrl, requestOptions, (res) => {
-          let data = '';
-    
-          res.on('data', (chunk) => {
-            data += chunk;
-          });
-    
-          res.on('end', () => {
-            try {
-              resolve(JSON.parse(data));
-            } catch (error) {
-              reject(error);
-            }
-          });
-        });
-    
-        req.on('error', (error) => {
-          console.error('Error during request:', error);
-          reject(error);
-        });
-        // If there is data to be sent in the request
-        if (requestOptions.data) {
-            req.write(JSON.stringify(requestOptions.data));
-          }
-        // End the request.
-        req.end();
-      });
-    }
-    acceptQuestion(){
-      const requestOptions={
-          "method": "POST",
-          "data": {operationName:"StartQuestionAnswering",variables:{"questionId":this.lastID},query:"mutation StartQuestionAnswering($questionId: Long!) {\n  startQuestionAnswering(questionId: $questionId)\n}"},
-          "headers": {
-              "Content-Type": "application/json",
-              "Apollographql-Client-Name": "chegg-web-producers",
-              "Cookie": this.cookie
-            }
-      }
-      return new Promise((resolve, reject) => {
-        const req = https.request(apiUrl, requestOptions, (res) => {
-          let data = '';
-    
-          res.on('data', (chunk) => {
-            data += chunk;
-          });
-    
-          res.on('end', () => {
-            try {
-              resolve(JSON.parse(data));
-            } catch (error) {
-              reject(error);
-            }
-          });
-        });
-    
-        req.on('error', (error) => {
-          console.error('Error during request:', error);
-          reject(error);
-        });
-        // If there is data to be sent in the request
-        if (requestOptions.data) {
-            req.write(JSON.stringify(requestOptions.data));
-          }
-        // End the request.
-        req.end();
-      });
-    }
-    skipQuestion() {
-      if(this.timeToCheck < (Math.floor(Date.now()/1000))){
-        return false;
-      }
-      const requestOptions={
-        "method": "POST",
-        "data": {operationName:"SkipQuestionAssignment",variables:{"questionId":this.lastID,"skipPageFlow":"ANSWERING","newSkipReason":{"primaryReason":"020","secondaryReason":""}},query:"mutation SkipQuestionAssignment($questionId: Long!, $skipPageFlow: QnaCurrentPageFlow!, $skipPrimaryReason: QuestionSkipPrimaryReasons, $newSkipReason: QuestionNewSkipReasons) {\n  skipQuestionAssignment(\n    questionId: $questionId\n    skipPageFlow: $skipPageFlow\n    skipPrimaryReason: $skipPrimaryReason\n    newSkipReason: $newSkipReason\n  ) {\n    message\n    questionId\n    __typename\n  }\n}"},
-        "headers": {
-            "Content-Type": "application/json",
-            "Apollographql-Client-Name": "chegg-web-producers",
-            "Cookie": this.cookie
-          }
+        query:
+          "mutation SkipQuestionAssignment($questionId: Long!, $skipPageFlow: QnaCurrentPageFlow!, $skipPrimaryReason: QuestionSkipPrimaryReasons, $newSkipReason: QuestionNewSkipReasons) {\n  skipQuestionAssignment(\n    questionId: $questionId\n    skipPageFlow: $skipPageFlow\n    skipPrimaryReason: $skipPrimaryReason\n    newSkipReason: $newSkipReason\n  ) {\n    message\n    questionId\n    __typename\n  }\n}",
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        "Apollographql-Client-Name": "chegg-web-producers",
+        Cookie: this.cookie,
+      },
     };
-    return new Promise((resolve, reject) => {
-      const req = https.request(apiUrl, requestOptions, (res) => {
-        let data = '';
-  
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-  
-        res.on('end', () => {
-          try {
-            resolve(JSON.parse(data));
-            // console.log("skipped");
-            console.log(data);
-            return true;
-          } catch (error) {
-            reject(error);
-            return false;
-          }
-        });
-      });
-  
-      req.on('error', (error) => {
-        console.error('Error during skipping:', error);
-        reject(error);
-        return false;
-      });
-      // If there is data to be sent in the request
-      if (requestOptions.data) {
-          req.write(JSON.stringify(requestOptions.data));
-        }
-      // End the request.
-      req.end();
-    });
+    try {
+      const res = await fetch(apiUrl, requestOptions);
+      const data = await res.json();
+      return data;
+    } catch (error) {
+      console.log(error);
     }
-    getLimit() {
-      const requestOptions={
-        "method": "POST",
-        "data": {operationName:"ExpertAnsweringLimit",variables:{},query:"query ExpertAnsweringLimit {\n  expertAnsweringLimit {\n    currentLimit\n    previousLimit\n    __typename\n  }\n}"},
-        "headers": {
-            "Content-Type": "application/json",
-            "Apollographql-Client-Name": "chegg-web-producers",
-            "Cookie": this.cookie
-          }
+  }
+  async getLimit() {
+    const requestOptions = {
+      method: "POST",
+      body: JSON.stringify({
+        operationName: "ExpertAnsweringLimit",
+        variables: {},
+        query:
+          "query ExpertAnsweringLimit {\n  expertAnsweringLimit {\n    currentLimit\n    previousLimit\n    __typename\n  }\n}",
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        "Apollographql-Client-Name": "chegg-web-producers",
+        Cookie: this.cookie,
+      },
     };
-    return new Promise((resolve, reject) => {
-      const req = https.request('https://gateway.chegg.com/nestor-graph/graphql', requestOptions, (res) => {
-        let data = '';
-    
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-    
-        res.on('end', () => {
-          try {
-            resolve(JSON.parse(data));
-            // console.log("skipped");
-            console.log(data);
-            return true;
-          } catch (error) {
-            reject(error);
-            return false;
-          }
-        });
-      });
-    
-      req.on('error', (error) => {
-        console.error('Error during skipping:', error);
-        reject(error);
-        return false;
-      });
-      // If there is data to be sent in the request
-      if (requestOptions.data) {
-          req.write(JSON.stringify(requestOptions.data));
-        }
-      // End the request.
-      req.end();
-    });
+    try {
+      const res = await fetch(apiUrl, requestOptions);
+      const data = await res.json();
+      return data;
+    } catch (error) {
+      console.log(error);
     }
-    updateLimit(newLimit){
-      this.limit = newLimit;
-    }
-    updateLastID(newID){
-      this.lastID = newID;
-    }
-    updateTimeToCheck(newTime){
-      this.timeToCheck = newTime;
-    }
-    updateLastMessageID(lastMessageIDs){
-      this.lastMessageIDs = lastMessageIDs;
-    }
+  }
+  updateLimit(newLimit) {
+    this.limit = newLimit;
+  }
+  updateLastQuestionId(newID) {
+    this.lastQuestionId = newID;
+  }
+  updateTimeToCheck(newTime) {
+    this.timeToCheck = newTime;
+  }
+  updateLastMessages(lastMessages) {
+    this.lastMessages = lastMessages;
+  }
 }
 
 module.exports = User;

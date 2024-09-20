@@ -1,5 +1,4 @@
 require("dotenv").config();
-const https = require("https");
 const {
   AttachmentBuilder,
   ActionRowBuilder,
@@ -31,11 +30,11 @@ const sendMessage = (client, msg) => {
 };
 
 const sendQuestionMessage = (client, msg, accountName) => {
-  const messageIDs = [];
+  const LastMessages = [];
   // get the channel
   const channel = client.channels.cache.get(process.env.channelId);
   channel.send(accountName).then((sentMessage) => {
-    messageIDs.push(sentMessage);
+    LastMessages.push(sentMessage);
   });
   // get Image Urls
   const imageUrls = extractImageUrls(msg);
@@ -43,61 +42,28 @@ const sendQuestionMessage = (client, msg, accountName) => {
     for (let i = 0; i < Math.min(imageUrls.length, 2); i++) {
       const att = new AttachmentBuilder(imageUrls[i], { name: "image.png" });
       channel.send({ files: [att] }).then((sentMessage) => {
-        messageIDs.push(sentMessage);
+        LastMessages.push(sentMessage);
       });
     }
   } else {
     const textContent = processHtml(msg);
     channel.send(textContent).then((sentMessage) => {
-        messageIDs.push(sentMessage);
-      });
+      LastMessages.push(sentMessage);
+    });
   }
-  return messageIDs;
+  return LastMessages;
 };
 
-const dryRUN = (client, cookies) => {
+const dryRUN = async (client, accounts) => {
   const channel = client.channels.cache.get(process.env.testChannelId);
-  for (let cookie of cookies) {
-    const requestOptions = {
-      method: "POST",
-      data: {
-        operationName: "NextQuestionAnsweringAssignment",
-        variables: {},
-        query:
-          "query NextQuestionAnsweringAssignment {\n  nextQuestionAnsweringAssignment {\n    question {\n      body\n      id\n      uuid\n      subject {\n        id\n        name\n        subjectGroup {\n          id\n          name\n          __typename\n        }\n        __typename\n      }\n      imageTranscriptionText\n      lastAnswerUuid\n      questionTemplate {\n        templateName\n        templateId\n        __typename\n      }\n      __typename\n    }\n    langTranslation {\n      body\n      translationLanguage\n      __typename\n    }\n    legacyAnswer {\n      id\n      body\n      isStructuredAnswer\n      structuredBody\n      template {\n        id\n        __typename\n      }\n      __typename\n    }\n    questionGeoLocation {\n      countryCode\n      countryName\n      languages\n      __typename\n    }\n    questionRoutingDetails {\n      answeringStartTime\n      bonusCount\n      bonusTimeAllocationEnabled\n      checkAnswerStructureEnabled\n      hasAnsweringStarted\n      questionAssignTime\n      questionSolvingProbability\n      routingType\n      allocationExperimentId\n      questionQualityFactor\n      routingTag\n      __typename\n    }\n    __typename\n  }\n}",
-      },
-      headers: {
-        "Content-Type": "application/json",
-        "Apollographql-Client-Name": "chegg-web-producers",
-        Cookie: cookie.cookie,
-      },
-    };
-    const req = https.request(
-      "https://gateway.chegg.com/nestor-graph/graphql",
-      requestOptions,
-      (res) => {
-        let data = "";
-        res.on("data", (chunk) => {
-          data += chunk;
-        });
-
-        res.on("end", () => {
-          channel.send(cookie.name);
-          channel.send(data.slice(0, 500));
-        });
-      }
-    );
-
-    req.on("error", (error) => {
-      console.error("Error during DRY RUN:", error);
-      channel.send("Error in request");
-    });
-    // If there is data to be sent in the request
-    if (requestOptions.data) {
-      req.write(JSON.stringify(requestOptions.data));
+  for (let account of accounts) {
+    try {
+      const data = await account.fetchDataFromApi();
+      channel.send(account.name);
+      channel.send(JSON.stringify(data).slice(0, 175));
+    } catch (error) {
+      console.log(error);
     }
-    // End the request.
-    req.end();
   }
 };
 
@@ -116,13 +82,14 @@ const sendButtons = (msg, cookies) => {
 
     row.addComponents(skip_button);
   }
-  const mess = msg.reply({
-    content: "Skip The Question??",
-    components: [row],
-  });
-  mess.then((res) => {
-    console.log("Buttons Sent");
-  });
+  msg
+    .reply({
+      content: "Skip The Question??",
+      components: [row],
+    })
+    .then((res) => {
+      console.log("Buttons Sent");
+    });
 };
 
 module.exports = { sendMessage, sendQuestionMessage, dryRUN, sendButtons };

@@ -12,7 +12,7 @@ const client = new Client({ intents: [
     IntentsBitField.Flags.MessageContent
 ] });
 
-const waitTimeSec = 30;
+const waitTimeSec = 5;
 const extraTime = 2*60;
 const wakeTime = 6
 const timeZone = 5;
@@ -30,7 +30,7 @@ client.on('messageCreate', (msg) => {
     if(msg.author.bot) return;
     // if msg is not from correct instance of bot -> return
     if(!(msg.channelId === process.env.testChannelId || msg.channelId === process.env.channelId)) return;
-    if(msg.content === "hello" || msg.content === "Hello" || msg.content === "Hii" || msg.content === "hii" || msg.content == "Hi" || msg.content == "hi"){
+    if(msg.content.toLocaleLowerCase() === "hello" || msg.content.toLocaleLowerCase() === "hii" || msg.content.toLocaleLowerCase() === "hi"){
         msg.reply("Hey!! How are you Today");
     }
     else if((msg.content === "on" || msg.content === "activate") && 0 < currHours && currHours < wakeTime){
@@ -39,13 +39,13 @@ client.on('messageCreate', (msg) => {
     }else if(msg.content === "off" && currHours < wakeTime){
         on = 0;forceOn=0;
         msg.reply("Good Night🛌💤");
-    }else if(msg.content.startsWith("dryRUN") && msg.channelId == process.env.testChannelId && (msg.author.id === "829800422633242644" || msg.author.id === "1098539236464017469")){
-        dryRUN(client, cookies);
+    }else if(msg.content === "dryRUN" && msg.channelId == process.env.testChannelId && (msg.author.id === "829800422633242644" || msg.author.id === "1098539236464017469")){
+        dryRUN(client, accounts);
         setTimeout(() => {
             sendButtons(msg, cookies);
         }, 10000);
-    }else if(msg.channelId == process.env.testChannelId && msg.content.startsWith("buttons")){
-        sendButtons(msg);
+    }else if(msg.content === "buttons" && msg.channelId === process.env.testChannelId){
+        sendButtons(msg, cookies);
     }
 });
 
@@ -56,7 +56,7 @@ const updateCookies = async () => {
     cookies = await getData();
     if (accounts.length == 0){
         for(let cookie of cookies){
-            const account = new User(cookie.name, cookie.cookie, 0, 0, 50);
+            const account = new User(cookie.name, cookie.cookie);
             accounts.push(account);
         }
         console.log("Accounts Initialised")
@@ -72,11 +72,11 @@ client.on('interactionCreate', async (interaction) => {
     if (!interaction.isButton()) return;
     for(let account of accounts){
         if(account.name == interaction.customId){
-            let skipped = account.skipQuestion();
+            let skipped = await account.skipQuestion();
             if(skipped){
                 interaction.reply(`${account.name} : skipped`);
-                client.channels.cache.get(process.env.channelId).bulkDelete(account.lastMessageIDs);
-                account.updateLastMessageID([]);
+                client.channels.cache.get(process.env.channelId).bulkDelete(account.lastMessages);
+                account.updateLastMessages([]);
                 account.updateTimeToCheck((Math.floor(Date.now()/1000)));
                 setTimeout(async ()=>{await interaction.deleteReply()},60*1000);
             }
@@ -136,7 +136,7 @@ setInterval(async () => {
         // If data don't have a question : continue
         if (data.errors){
             console.log( account.name , `Waiting for ${waitTimeSec} seconds...`);
-            account.updateLastMessageID([]);
+            account.updateLastMessages([]);
             // sendMessage(client, account.name + " No Question is there"); // remove
             continue;
         }
@@ -149,11 +149,11 @@ setInterval(async () => {
         }
         // If data have a question : send a message by the bot
         console.log("Got a Question Updating data");
-        account.updateLastID(que.id);
+        account.updateLastQuestionId(que.id);
         account.updateTimeToCheck(Math.floor(Date.now()/1000)+extraTime);
         // send new question message
-        const lastMessageIDs = sendQuestionMessage(client, que.body, account.name);
-        account.updateLastMessageID(lastMessageIDs);
+        const lastMessages = sendQuestionMessage(client, que.body, account.name);
+        account.updateLastMessages(lastMessages);
         // try to accept the Question
         const response = await account.acceptQuestion(); 
         if(response.errors){
@@ -164,10 +164,9 @@ setInterval(async () => {
         } catch (error) {
             console.error('Some error occured:', error);
         }
-        
     }
 }}, waitTimeSec * 1000); // Convert time to milliseconds
 
 
 
-client.login(process.env.TOKEN); 
+client.login(process.env.TOKEN);
