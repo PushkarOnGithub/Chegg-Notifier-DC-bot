@@ -1,6 +1,5 @@
-const apiUrl = "https://gateway.chegg.com/nestor-graph/graphql";
-
 class User {
+  #apiUrl = "https://gateway.chegg.com/nestor-graph/graphql";
   constructor(
     _name,
     _cookie,
@@ -33,7 +32,7 @@ class User {
       },
     };
     try {
-      const res = await fetch(apiUrl, requestOptions);
+      const res = await fetch(this.#apiUrl, requestOptions);
       const data = await res.json();
       return data;
     } catch (error) {
@@ -56,7 +55,7 @@ class User {
       },
     };
     try {
-      const res = await fetch(apiUrl, requestOptions);
+      const res = await fetch(this.#apiUrl, requestOptions);
       const data = await res.json();
       return data;
     } catch (error) {
@@ -87,7 +86,7 @@ class User {
       },
     };
     try {
-      const res = await fetch(apiUrl, requestOptions);
+      const res = await fetch(this.#apiUrl, requestOptions);
       const data = await res.json();
       return data;
     } catch (error) {
@@ -110,7 +109,7 @@ class User {
       },
     };
     try {
-      const res = await fetch(apiUrl, requestOptions);
+      const res = await fetch(this.#apiUrl, requestOptions);
       const data = await res.json();
       return data;
     } catch (error) {

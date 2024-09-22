@@ -30,6 +30,7 @@ const sendMessage = (client, msg) => {
 };
 
 const sendQuestionMessage = (client, msg, accountName) => {
+  // return [];
   const LastMessages = [];
   // get the channel
   const channel = client.channels.cache.get(process.env.channelId);
@@ -71,25 +72,33 @@ const sendButtons = (msg, cookies) => {
   if (msg.author.bot) {
     return;
   }
-  // buttons row
-  let row = new ActionRowBuilder();
+  // split the buttons into chunks of 4 because max button limit is 5
+  const total = cookies.length;
+  let i = 0;
+  while (i < total) {
+    // buttons row
+    let row = new ActionRowBuilder();
+    let j = 0;
+    while (j < 4 && i < total) {
+      const cookie = cookies[i];
+      const skip_buttons = new ButtonBuilder()
+        .setCustomId(cookie.name)
+        .setLabel(cookie.name)
+        .setStyle(ButtonStyle.Danger);
 
-  for (let cookie of cookies) {
-    const skip_button = new ButtonBuilder()
-      .setCustomId(cookie.name)
-      .setLabel(cookie.name)
-      .setStyle(ButtonStyle.Danger);
-
-    row.addComponents(skip_button);
+      row.addComponents(skip_buttons);
+      j++;
+      i++;
+    }
+    msg
+      .reply({
+        content: "Skip The Question??",
+        components: [row],
+      })
+      .then((res) => {
+        console.log("Buttons Sent");
+      });
   }
-  msg
-    .reply({
-      content: "Skip The Question??",
-      components: [row],
-    })
-    .then((res) => {
-      console.log("Buttons Sent");
-    });
 };
 
 module.exports = { sendMessage, sendQuestionMessage, dryRUN, sendButtons };

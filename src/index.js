@@ -12,10 +12,10 @@ const client = new Client({ intents: [
     IntentsBitField.Flags.MessageContent
 ] });
 
-const waitTimeSec = 5;
+const waitTimeSec = parseInt(process.env.waitTimeSec) || 30;
 const extraTime = 2*60;
 const wakeTime = 6
-const timeZone = 5;
+const timeZone = parseInt(process.env.timeZone) || 5;
 let on = 1;
 let forceOn = 0;
 let msgSent = 0;
@@ -142,7 +142,7 @@ setInterval(async () => {
         }
         const que = data.data.nextQuestionAnsweringAssignment.question;  // get fetched question
         // Check if queID and lastID are equal
-        if(que.id == account.lastID){
+        if(que.id == account.lastQuestionId){
             account.updateTimeToCheck(Math.floor(Date.now()/1000)+extraTime);
             console.log(account.name ,`Waiting for ${extraTime} seconds`);
             continue;
