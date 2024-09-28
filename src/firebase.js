@@ -12,7 +12,7 @@ const { firebaseConfig } = require("./firebaseCreds.js");
 
 let app;
 let firebaseDb;
-
+const collectionName = process.env.collectionName;
 // Initialise
 const InitialiseFirebaseApp = () => {
   try {
@@ -27,9 +27,9 @@ const InitialiseFirebaseApp = () => {
 InitialiseFirebaseApp();
 
 // Upload
-const uploadData = async (dataToUpload, name = "Lokesh") => {
+const uploadData = async (dataToUpload) => {
   try {
-    const document = doc(firebaseDb, process.env.collectionName, name);
+    const document = doc(firebaseDb, collectionName, dataToUpload.name);
     let uploadedData = await setDoc(document, dataToUpload);
     return uploadedData;
   } catch (error) {
@@ -38,9 +38,9 @@ const uploadData = async (dataToUpload, name = "Lokesh") => {
 };
 
 // Get
-const getData = async () => {
+const getCookies = async () => {
   try {
-    const collectionRef = collection(firebaseDb, process.env.collectionName);
+    const collectionRef = collection(firebaseDb, collectionName);
     const data = [];
     const q = query(collectionRef);
 
@@ -57,4 +57,4 @@ const getData = async () => {
 
 const getFireBaseApp = () => app;
 
-module.exports = {getFireBaseApp, uploadData, getData };
+module.exports = {getFireBaseApp, uploadData, getCookies };

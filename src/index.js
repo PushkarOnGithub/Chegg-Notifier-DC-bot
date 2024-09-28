@@ -1,7 +1,8 @@
 const { Client, IntentsBitField } = require('discord.js');
 const User = require('./user');
 const {sendMessage, sendQuestionMessage, dryRUN, sendButtons} = require('./modules');
-const { getData } = require('./firebase');
+const { getCookies } = require('./firebase');
+const updateFirebaseCookies = require('./updateAllCookies');
 
 require('dotenv').config();
 
@@ -19,7 +20,7 @@ const timeZone = parseInt(process.env.timeZone) || 5;
 let on = 1;
 let forceOn = 0;
 let msgSent = 0;
-let currHours = ((new Date(Date.now())).getHours()+timeZone)%24;
+let currHours = (new Date().getHours()+timeZone)%24;
 
 client.on('ready', () => {
     console.log(`${client.user.tag} Bot Ready!!`);
@@ -30,7 +31,7 @@ client.on('messageCreate', (msg) => {
     if(msg.author.bot) return;
     // if msg is not from correct instance of bot -> return
     if(!(msg.channelId === process.env.testChannelId || msg.channelId === process.env.channelId)) return;
-    if(msg.content.toLocaleLowerCase() === "hello" || msg.content.toLocaleLowerCase() === "hii" || msg.content.toLocaleLowerCase() === "hi"){
+    if(msg.content.toLowerCase() === "hello" || msg.content.toLowerCase() === "hii" || msg.content.toLowerCase() === "hi"){
         msg.reply("Hey!! How are you Today");
     }
     else if((msg.content === "on" || msg.content === "activate") && 0 < currHours && currHours < wakeTime){
@@ -40,10 +41,14 @@ client.on('messageCreate', (msg) => {
         on = 0;forceOn=0;
         msg.reply("Good Night🛌💤");
     }else if(msg.content === "dryRUN" && msg.channelId == process.env.testChannelId && (msg.author.id === "829800422633242644" || msg.author.id === "1098539236464017469")){
+        updateCookies()
         dryRUN(client, accounts);
         setTimeout(() => {
             sendButtons(msg, cookies);
         }, 10000);
+    }else if(msg.content === "update" && msg.channelId == process.env.testChannelId && (msg.author.id === "829800422633242644" || msg.author.id === "1098539236464017469")){
+        updateFirebaseCookies();
+        msg.reply("Updated");
     }else if(msg.content === "buttons" && msg.channelId === process.env.testChannelId){
         sendButtons(msg, cookies);
     }
@@ -53,7 +58,7 @@ let cookies = [];
 let accounts = [];
 
 const updateCookies = async () => {
-    cookies = await getData();
+    cookies = await getCookies();
     if (accounts.length == 0){
         for(let cookie of cookies){
             const account = new User(cookie.name, cookie.cookie);
@@ -88,10 +93,10 @@ client.on('interactionCreate', async (interaction) => {
 // Loop
 
 setInterval(async () => {
-    if ((new Date(Date.now())).getMinutes() === 0){
+    if (new Date().getMinutes() === 0){
         updateCookies();
     }
-    currHours = ((new Date(Date.now())).getHours()+timeZone)%24;
+    currHours = (new Date().getHours()+timeZone)%24;
     
     if(currHours>=wakeTime && !on){
         on = 1;
