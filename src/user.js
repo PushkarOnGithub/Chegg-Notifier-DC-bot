@@ -63,7 +63,7 @@ class User {
     }
   }
   async skipQuestion() {
-    if (this.timeToCheck < Math.floor(Date.now() / 1000)) {
+    if (this.lastMessages.length === 0) {
       return false;
     }
 

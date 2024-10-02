@@ -6,3 +6,4 @@ cookies.js
 node_modules/
 firebaseCreds.js
 accounts.json
+serviceAccountKey.json

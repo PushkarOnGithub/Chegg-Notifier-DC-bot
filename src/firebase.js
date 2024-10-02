@@ -1,52 +1,45 @@
 require("dotenv").config();
-const { initializeApp } = require("firebase/app");
-const {
-  getFirestore,
-  doc,
-  setDoc,
-  collection,
-  query,
-  getDocs,
-} = require("firebase/firestore");
-const { firebaseConfig } = require("./firebaseCreds.js");
+const admin = require("firebase-admin");
+const serviceAccount = require("./serviceAccountKey.json");
 
-let app;
 let firebaseDb;
 const collectionName = process.env.collectionName;
-// Initialise
-const InitialiseFirebaseApp = () => {
+
+// Initialise Firebase Admin SDK
+const InitialiseFirebaseAdminApp = () => {
   try {
-    app = initializeApp(firebaseConfig);
-    firebaseDb = getFirestore();
-    return app;
+    // Initialize the admin app using service account
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+    firebaseDb = admin.firestore();
+    return admin;
   } catch (error) {
-    console.log("Error in initialising firebase app or database", error);
+    console.log("Error in initializing firebase admin app or database", error);
   }
 };
 
-InitialiseFirebaseApp();
+InitialiseFirebaseAdminApp();
 
-// Upload
+// Upload Data to Firestore
 const uploadData = async (dataToUpload) => {
   try {
-    const document = doc(firebaseDb, collectionName, dataToUpload.name);
-    let uploadedData = await setDoc(document, dataToUpload);
+    const documentRef = firebaseDb.collection(collectionName).doc(dataToUpload.name);
+    let uploadedData = await documentRef.set(dataToUpload);
     return uploadedData;
   } catch (error) {
-    console.log("Error in uploading", error);
+    console.log("Error in uploading data", error);
   }
 };
 
-// Get
+// Get Cookies (Documents from Firestore)
 const getCookies = async () => {
   try {
-    const collectionRef = collection(firebaseDb, collectionName);
+    const collectionRef = firebaseDb.collection(collectionName);
     const data = [];
-    const q = query(collectionRef);
+    const snapshot = await collectionRef.get();
 
-    const docSnap = await getDocs(q);
-
-    docSnap.forEach((doc) => {
+    snapshot.forEach((doc) => {
       data.push(doc.data());
     });
     return data;
@@ -55,6 +48,7 @@ const getCookies = async () => {
   }
 };
 
-const getFireBaseApp = () => app;
+// Export the functions
+const getFireBaseApp = () => admin;
 
-module.exports = {getFireBaseApp, uploadData, getCookies };
+module.exports = { getFireBaseApp, uploadData, getCookies };

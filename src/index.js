@@ -64,6 +64,7 @@ const updateCookies = async () => {
             const account = new User(cookie.name, cookie.cookie);
             accounts.push(account);
         }
+        console.log(cookies);
         console.log("Accounts Initialised")
     }else{
         for(let i = 0;i<accounts.length;i++){
@@ -78,13 +79,15 @@ client.on('interactionCreate', async (interaction) => {
     for(let account of accounts){
         if(account.name == interaction.customId){
             let skipped = await account.skipQuestion();
-            if(skipped){
+            if(! skipped.errors){
                 interaction.reply(`${account.name} : skipped`);
                 client.channels.cache.get(process.env.channelId).bulkDelete(account.lastMessages);
                 account.updateLastMessages([]);
                 account.updateTimeToCheck((Math.floor(Date.now()/1000)));
-                setTimeout(async ()=>{await interaction.deleteReply()},60*1000);
+            }else{
+                interaction.reply("Some error occured");
             }
+            setTimeout(async ()=>{await interaction.deleteReply()},60*1000);
             break;
         }
     }
@@ -127,7 +130,7 @@ setInterval(async () => {
             }
         }
         if(account.timeToCheck >= (Math.floor(Date.now()/1000))){
-            console.log("Continued in ", account.name); // remove
+            console.log("Continued in ", account.name);
             continue;
         }
         try {
@@ -142,7 +145,6 @@ setInterval(async () => {
         if (data.errors){
             console.log( account.name , `Waiting for ${waitTimeSec} seconds...`);
             account.updateLastMessages([]);
-            // sendMessage(client, account.name + " No Question is there"); // remove
             continue;
         }
         const que = data.data.nextQuestionAnsweringAssignment.question;  // get fetched question

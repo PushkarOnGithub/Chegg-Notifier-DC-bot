@@ -34,23 +34,35 @@ const sendQuestionMessage = (client, msg, accountName) => {
   const LastMessages = [];
   // get the channel
   const channel = client.channels.cache.get(process.env.channelId);
-  channel.send(accountName).then((sentMessage) => {
-    LastMessages.push(sentMessage);
-  });
-  // get Image Urls
+  
+  // try to get any Image Urls
   const imageUrls = extractImageUrls(msg);
   if (imageUrls.length) {
-    for (let i = 0; i < Math.min(imageUrls.length, 2); i++) {
-      const att = new AttachmentBuilder(imageUrls[i], { name: "image.png" });
-      channel.send({ files: [att] }).then((sentMessage) => {
+    // Prepare attachments (up to 2 images)
+    const attachments = imageUrls
+      .slice(0, 2)
+      .map((url) => new AttachmentBuilder(url, { name: "image.png" }));
+
+    // Send the message with attachments
+    channel
+      .send({
+        content: accountName,
+        files: attachments,
+      })
+      .then((sentMessage) => {
         LastMessages.push(sentMessage);
       });
-    }
+      
   } else {
     const textContent = processHtml(msg);
-    channel.send(textContent).then((sentMessage) => {
-      LastMessages.push(sentMessage);
-    });
+    channel
+      .send(
+        `${accountName} 
+      ${textContent}`
+      )
+      .then((sentMessage) => {
+        LastMessages.push(sentMessage);
+      });
   }
   return LastMessages;
 };
