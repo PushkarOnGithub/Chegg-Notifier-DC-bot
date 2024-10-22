@@ -78,16 +78,15 @@ client.on('interactionCreate', async (interaction) => {
     if (!interaction.isButton()) return;
     for(let account of accounts){
         if(account.name == interaction.customId){
-            let skipped = await account.skipQuestion();
-            if(! skipped.errors){
+            if(account.lastMessages.length > 0){
+                await account.skipQuestion();
                 interaction.reply(`${account.name} : skipped`);
                 client.channels.cache.get(process.env.channelId).bulkDelete(account.lastMessages);
                 account.updateLastMessages([]);
                 account.updateTimeToCheck((Math.floor(Date.now()/1000)));
             }else{
-                interaction.reply("Some error occured");
+                interaction.reply("No Question to Skip");
             }
-            setTimeout(async ()=>{await interaction.deleteReply()},60*1000);
             break;
         }
     }

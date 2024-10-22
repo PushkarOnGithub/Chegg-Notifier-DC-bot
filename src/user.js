@@ -1,5 +1,5 @@
 class User {
-  #apiUrl = "https://gateway.chegg.com/nestor-graph/graphql";
+  #apiUrl = "https://expert-gateway.chegg.com/nestor-graph/graphql";
   constructor(
     _name,
     _cookie,
