@@ -28,6 +28,7 @@ class User {
       headers: {
         "Content-Type": "application/json",
         "Apollographql-Client-Name": "chegg-web-producers",
+        "Authorization": "Basic alNNNG5iVHNXV0lHR2Y3OU1XVXJlQjA3YmpFeHJrRzM6SmQxbTVmd3o3aHRobnlCWg==",
         Cookie: this.cookie,
       },
     };
@@ -51,6 +52,7 @@ class User {
       headers: {
         "Content-Type": "application/json",
         "Apollographql-Client-Name": "chegg-web-producers",
+        "Authorization": "Basic alNNNG5iVHNXV0lHR2Y3OU1XVXJlQjA3YmpFeHJrRzM6SmQxbTVmd3o3aHRobnlCWg==",
         Cookie: this.cookie,
       },
     };
@@ -82,6 +84,7 @@ class User {
       headers: {
         "Content-Type": "application/json",
         "Apollographql-Client-Name": "chegg-web-producers",
+        "Authorization": "Basic alNNNG5iVHNXV0lHR2Y3OU1XVXJlQjA3YmpFeHJrRzM6SmQxbTVmd3o3aHRobnlCWg==",
         Cookie: this.cookie,
       },
     };
@@ -105,6 +108,7 @@ class User {
       headers: {
         "Content-Type": "application/json",
         "Apollographql-Client-Name": "chegg-web-producers",
+        "Authorization": "Basic alNNNG5iVHNXV0lHR2Y3OU1XVXJlQjA3YmpFeHJrRzM6SmQxbTVmd3o3aHRobnlCWg==",
         Cookie: this.cookie,
       },
     };

@@ -2,7 +2,12 @@ const puppeteer = require("puppeteer");
 const { uploadData } = require("./firebase");
 
 async function fetchAndUpdateCookie(name, username, password) {
-  const browser = await puppeteer.launch({ headless: false }); // Launch without GUI
+  let browser;
+  if(process.env.NODE_ENV === "development"){
+    browser = await puppeteer.launch({ headless: false }); // Launch with GUI
+  }else{
+    browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium-browser', headless: true }); // Launch without GUI
+  }
   const page = await browser.newPage();
   try {
     // Navigate to the login page
@@ -36,7 +41,7 @@ async function fetchAndUpdateCookie(name, username, password) {
       };
 
       // Call the Firebase upload function
-      const res = await uploadData(dataToUpload);
+      await uploadData(dataToUpload);
       console.log("Cookie uploaded successfully");
     } else {
       console.log("Auth cookie not found!");
