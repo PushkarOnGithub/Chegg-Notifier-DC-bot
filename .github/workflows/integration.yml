@@ -17,7 +17,8 @@ jobs:
           DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
       run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-    - name: Build the Docker image
-      run: docker build -t chegg-bot .
-    - name: Push to DockerHub
-      run: docker push ps0p/chegg-bot:latest
+    - name: Build and tag the Docker image
+      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/chegg-bot:latest .
+
+    - name: Push the Docker image
+      run: docker push ${{ secrets.DOCKER_USERNAME }}/chegg-bot:latest
