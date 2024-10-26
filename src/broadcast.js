@@ -10,7 +10,7 @@ const client = new Client({ intents: [
     IntentsBitField.Flags.MessageContent
 ] });
 
-let message = "Bye Bye Utsav👋👋 You will be missed 🥹🥹"
+let message = "Bye Bye Utsav👋👋 You will be missed 🥹🥹" 
 
 client.on('ready', () => {
     console.log(`${client.user.tag} Bot Ready!!`);
