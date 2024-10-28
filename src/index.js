@@ -14,8 +14,8 @@ const client = new Client({ intents: [
 ] });
 
 const waitTimeSec = parseInt(process.env.waitTimeSec) || 30;
-const extraTime = 2*60;
-const wakeTime = 6
+const extraTime = parseInt(process.env.extraTime) || 2*60;
+const wakeTime = parseInt(process.env.wakeTime) || 6;
 const timeZone = parseInt(process.env.timeZone) || 5;
 let on = 1;
 let forceOn = 0;
@@ -95,6 +95,12 @@ client.on('interactionCreate', async (interaction) => {
 // Loop
 
 setInterval(async () => {
+    // update variables for changes in env
+    waitTimeSec = parseInt(process.env.waitTimeSec) || 30;
+    extraTime = parseInt(process.env.extraTime) || 2*60;
+    wakeTime = parseInt(process.env.wakeTime) || 6;
+    timeZone = parseInt(process.env.timeZone) || 5;
+    
     if (new Date().getMinutes() === 0){
         updateCookies();
     }

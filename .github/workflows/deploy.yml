@@ -1,0 +1,24 @@
+name: Deploy to EC2
+
+on:
+  workflow_run:
+    workflows: ["Docker Image CI"]
+    types:
+      - completed
+
+jobs:
+
+  build:
+
+    runs-on: self-hosted
+
+    steps:
+    - name: Pull Docker Image
+      run: sudo docker pull ${{ secrets.DOCKER_USERNAME }}/chegg-bot:latest
+    
+    - name: Stop and remove the existing container
+      run: sudo docker stop chegg-bot-container || true
+      run: sudo docker rm -f chegg-bot-container || true
+
+    - name: Run the Docker container
+      run: sudo docker run -d --name chegg-bot-container ${{ secrets.DOCKER_USERNAME }}/chegg-bot:latest
