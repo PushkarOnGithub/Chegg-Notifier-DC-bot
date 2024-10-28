@@ -17,7 +17,6 @@ jobs:
       run: sudo docker pull ${{ secrets.DOCKER_USERNAME }}/chegg-bot:latest
     
     - name: Stop and remove the existing container
-      run: sudo docker stop chegg-bot-container || true
       run: sudo docker rm -f chegg-bot-container || true
 
     - name: Run the Docker container

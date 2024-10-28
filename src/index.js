@@ -73,11 +73,12 @@ const updateCookies = async () => {
         console.log("cookies changed");
     }
 }
-
+let totalSkipped = 0;
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isButton()) return;
     for(let account of accounts){
         if(account.name == interaction.customId){
+            totalSkipped++;
             if(account.lastMessages.length > 0){
                 await account.skipQuestion();
                 interaction.reply(`${account.name} : skipped`);
@@ -89,18 +90,18 @@ client.on('interactionCreate', async (interaction) => {
             }
             break;
         }
+        if(totalSkipped >= 5){
+            setTimeout(() => {
+                client.channels.cache.get(process.env.channelId).bulkDelete(5);
+            }, 30*1000);
+            totalSkipped = 0;
+        }
     }
   });
 
 // Loop
 
 setInterval(async () => {
-    // update variables for changes in env
-    waitTimeSec = parseInt(process.env.waitTimeSec) || 30;
-    extraTime = parseInt(process.env.extraTime) || 2*60;
-    wakeTime = parseInt(process.env.wakeTime) || 6;
-    timeZone = parseInt(process.env.timeZone) || 5;
-    
     if (new Date().getMinutes() === 0){
         updateCookies();
     }
