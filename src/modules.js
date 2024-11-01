@@ -68,7 +68,7 @@ const sendQuestionMessage = (client, msg, accountName) => {
 };
 
 const dryRUN = async (client, accounts) => {
-  const channel = client.channels.cache.get(process.env.testChannelId);
+  const channel = client.channels.cache.get(process.env.controlChannelId);
   for (let account of accounts) {
     try {
       const data = await account.fetchDataFromApi();
@@ -80,10 +80,7 @@ const dryRUN = async (client, accounts) => {
   }
 };
 
-const sendButtons = (msg, cookies) => {
-  if (msg.author.bot) {
-    return;
-  }
+const sendButtons = (client, cookies) => {
   // split the buttons into chunks of 4 because max button limit is 5
   const total = cookies.length;
   let i = 0;
@@ -102,8 +99,8 @@ const sendButtons = (msg, cookies) => {
       j++;
       i++;
     }
-    msg
-      .reply({
+    const channel = client.channels.cache.get(process.env.controlChannelId);
+    channel.send({
         content: "Skip The Question??",
         components: [row],
       })

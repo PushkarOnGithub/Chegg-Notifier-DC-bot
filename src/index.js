@@ -30,27 +30,43 @@ client.on('ready', () => {
 client.on('messageCreate', (msg) => {
     if(msg.author.bot) return;
     // if msg is not from correct instance of bot -> return
-    if(!(msg.channelId === process.env.testChannelId || msg.channelId === process.env.channelId)) return;
-    if(msg.content.toLowerCase() === "hello" || msg.content.toLowerCase() === "hii" || msg.content.toLowerCase() === "hi"){
-        msg.reply("Hey!! How are you Today");
+    const allowedChannelIds = [process.env.controlChannelId, process.env.channelId];
+    if (!allowedChannelIds.includes(msg.channelId)) return;
+
+    const content = msg.content.toLowerCase();
+    const isControlChannel = msg.channelId === process.env.controlChannelId;
+    const isAuthorizedUser = ["829800422633242644", "1098539236464017469"].includes(msg.author.id);
+
+    // Greeting responses
+    if (["hello", "hii", "hi"].includes(content)) {
+        return msg.reply("Hey!! How are you Today");
     }
-    else if((msg.content === "on" || msg.content === "activate") && 0 < currHours && currHours < wakeTime){
+    // Night-time activation
+    if ((content === "on" || content === "activate") && 0 < currHours && currHours < wakeTime) {
         forceOn = 1;
-        msg.reply("Hello Night Owl !!! I'm awake");
-    }else if(msg.content === "off" && currHours < wakeTime){
-        on = 0;forceOn=0;
-        msg.reply("Good Night🛌💤");
-    }else if(msg.content === "dryRUN" && msg.channelId == process.env.testChannelId && (msg.author.id === "829800422633242644" || msg.author.id === "1098539236464017469")){
-        updateCookies()
+        return msg.reply("Hello Night Owl !!! I'm awake");
+    }
+    // Night-time deactivation
+    if (content === "off" && currHours < wakeTime) {
+        on = 0;
+        forceOn = 0;
+        return msg.reply("Good Night🛌💤");
+    }
+    // Execute dryRUN command if in control channel and by authorized users
+    if (content === "dryrun" && isControlChannel && isAuthorizedUser) {
+        updateCookies();
         dryRUN(client, accounts);
-        setTimeout(() => {
-            sendButtons(msg, cookies);
-        }, 10000);
-    }else if(msg.content === "update" && msg.channelId == process.env.testChannelId && (msg.author.id === "829800422633242644" || msg.author.id === "1098539236464017469")){
+        setTimeout(() => sendButtons(client, cookies), 10000);
+        return;
+    }
+    // Update Firebase cookies if in control channel and by authorized users
+    if (content === "update" && isControlChannel && isAuthorizedUser) {
         updateFirebaseCookies();
-        msg.reply("Updated");
-    }else if(msg.content === "buttons" && msg.channelId === process.env.testChannelId){
-        sendButtons(msg, cookies);
+        return msg.reply("Updated");
+    }
+    // Send buttons if in control channel
+    if (content === "buttons" && isControlChannel) {
+        return sendButtons(client, cookies);
     }
 });
 
@@ -76,6 +92,8 @@ const updateCookies = async () => {
 let totalSkipped = 0;
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isButton()) return;
+    // if msg is not from correct instance of bot -> return
+    if (![process.env.controlChannelId, process.env.channelId].includes(msg.channelId)) return;
     for(let account of accounts){
         if(account.name == interaction.customId){
             totalSkipped++;
@@ -86,16 +104,16 @@ client.on('interactionCreate', async (interaction) => {
                 account.updateLastMessages([]);
                 account.updateTimeToCheck((Math.floor(Date.now()/1000)));
             }else{
-                interaction.reply("No Question to Skip");
+                interaction.reply(`${account.name} : No Question to Skip`);
             }
             break;
         }
-        if(totalSkipped >= 5){
-            setTimeout(() => {
-                client.channels.cache.get(process.env.channelId).bulkDelete(5);
-            }, 30*1000);
-            totalSkipped = 0;
-        }
+    }
+    if(totalSkipped >= 5){
+        setTimeout(() => {
+            sendButtons(client, cookies);
+        }, 30*1000);
+        totalSkipped = 0;
     }
   });
 

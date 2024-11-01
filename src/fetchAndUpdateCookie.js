@@ -28,6 +28,10 @@ async function fetchAndUpdateCookie(name, username, password) {
     console.log("Login successful, new page loaded!");
 
     // // Wait for the page to load after login
+    // Navigate to the expert page
+    await page.goto("https://expert.chegg.com/qna/authoring/answer", {
+      waitUntil: "networkidle0",
+    });
 
     // Get cookies
     const cookies = await page.cookies();
