@@ -1,12 +1,37 @@
 const puppeteer = require("puppeteer");
 const { uploadData } = require("./firebase");
+const fs = require("fs");
+
+const updateFirebaseCookies = async () => {
+  // Read the accounts from the file
+  try {
+    const accounts = JSON.parse(
+      fs.readFileSync(process.env.accountsFilePath, "utf-8")
+    );
+    console.log("Accounts read from file");
+    console.log(accounts);
+
+    for (const account of accounts) {
+      const { name, username, password } = account;
+      console.log(`Processing login for ${name}`);
+
+      // call the fetchAndUpdateCookie function to start the login process for each account
+      await fetchAndUpdateCookie(name, username, password);
+    }
+  } catch (e) {
+    console.error("Error in processing login", e.message);
+  }
+};
 
 async function fetchAndUpdateCookie(name, username, password) {
   let browser;
-  if(process.env.NODE_ENV === "development"){
+  if (process.env.NODE_ENV === "development") {
     browser = await puppeteer.launch({ headless: false }); // Launch with GUI
-  }else{
-    browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium-browser', headless: true }); // Launch without GUI
+  } else {
+    browser = await puppeteer.launch({
+      executablePath: "/usr/bin/chromium-browser",
+      headless: true,
+    }); // Launch without GUI
   }
   const page = await browser.newPage();
   try {
@@ -25,13 +50,7 @@ async function fetchAndUpdateCookie(name, username, password) {
     // Wait for the new page to load after login
     await page.waitForNavigation({ waitUntil: "networkidle2" });
 
-    console.log("Login successful, new page loaded!");
-
-    // // Wait for the page to load after login
-    // Navigate to the expert page
-    await page.goto("https://expert.chegg.com/qna/authoring/answer", {
-      waitUntil: "networkidle0",
-    });
+    console.log("Login successful, reading cookies...");
 
     // Get cookies
     const cookies = await page.cookies();
@@ -53,6 +72,7 @@ async function fetchAndUpdateCookie(name, username, password) {
 
     await browser.close();
   } catch (error) {
+    console.error(`Error in fetching cookie for ${name}: ${error.message}`);
     await browser.close();
   }
 }
@@ -66,4 +86,5 @@ function prepareCookies(cookies) {
   return parts.join(" ");
 }
 
-module.exports = fetchAndUpdateCookie;
+
+module.exports = {updateFirebaseCookies};

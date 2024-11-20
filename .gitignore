@@ -7,3 +7,5 @@ node_modules/
 firebaseCreds.js
 accounts.json
 serviceAccountKey.json
+otherAccounts.json
+tests/

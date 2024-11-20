@@ -2,29 +2,19 @@ const { Client, IntentsBitField } = require('discord.js');
 const User = require('./user');
 const {sendMessage, sendQuestionMessage, dryRUN, sendButtons} = require('./modules');
 const { getCookies } = require('./firebase');
-const updateFirebaseCookies = require('./updateAllCookies');
+const {updateFirebaseCookies} = require('./fetchAndUpdateFirebaseCookies');
 
 require('dotenv').config();
 
 const client = new Client({ intents: [
     IntentsBitField.Flags.Guilds,
-    IntentsBitField.Flags.GuildMembers,
     IntentsBitField.Flags.GuildMessages,
     IntentsBitField.Flags.MessageContent
 ] });
 
-const waitTimeSec = parseInt(process.env.waitTimeSec) || 30;
-const extraTime = parseInt(process.env.extraTime) || 2*60;
-const wakeTime = parseInt(process.env.wakeTime) || 6;
-const timeZone = parseInt(process.env.timeZone) || 5;
-let on = 1;
-let forceOn = 0;
-let msgSent = 0;
-let currHours = (new Date().getHours()+timeZone)%24;
-
 client.on('ready', () => {
     console.log(`${client.user.tag} Bot Ready!!`);
-    updateCookies();
+    initialiseOrUpdateAccounts();
 });
 
 client.on('messageCreate', (msg) => {
@@ -54,9 +44,9 @@ client.on('messageCreate', (msg) => {
     }
     // Execute dryRUN command if in control channel and by authorized users
     if (content === "dryrun" && isControlChannel && isAuthorizedUser) {
-        updateCookies();
+        initialiseOrUpdateAccounts();
         dryRUN(client, accounts);
-        setTimeout(() => sendButtons(client, cookies), 10000);
+        setTimeout(() => sendButtons(client, accounts), 10000);
         return;
     }
     // Update Firebase cookies if in control channel and by authorized users
@@ -66,21 +56,20 @@ client.on('messageCreate', (msg) => {
     }
     // Send buttons if in control channel
     if (content === "buttons" && isControlChannel) {
-        return sendButtons(client, cookies);
+        return sendButtons(client, accounts);
     }
 });
 
-let cookies = [];
 let accounts = [];
-
-const updateCookies = async () => {
-    cookies = await getCookies();
+// Initialise accounts or update accounts with new cookies
+async function initialiseOrUpdateAccounts(){
+    let cookies = await getCookies();
     if (accounts.length == 0){
         for(let cookie of cookies){
             const account = new User(cookie.name, cookie.cookie);
             accounts.push(account);
+            console.log(cookie.name);
         }
-        console.log(cookies);
         console.log("Accounts Initialised")
     }else{
         for(let i = 0;i<accounts.length;i++){
@@ -91,37 +80,50 @@ const updateCookies = async () => {
 }
 let totalSkipped = 0;
 client.on('interactionCreate', async (interaction) => {
-    if (!interaction.isButton()) return;
     // if msg is not from correct instance of bot -> return
-    if (![process.env.controlChannelId, process.env.channelId].includes(msg.channelId)) return;
+    if (![process.env.controlChannelId, process.env.channelId].includes(interaction.channelId)) return;
+    // if msg is not a button click -> return
+    if (!interaction.isButton()) return;
     for(let account of accounts){
         if(account.name == interaction.customId){
             totalSkipped++;
+            // Skip the question
             if(account.lastMessages.length > 0){
                 await account.skipQuestion();
                 interaction.reply(`${account.name} : skipped`);
                 client.channels.cache.get(process.env.channelId).bulkDelete(account.lastMessages);
                 account.updateLastMessages([]);
-                account.updateTimeToCheck((Math.floor(Date.now()/1000)));
+                account.updateTimeToCheck(0);
             }else{
                 interaction.reply(`${account.name} : No Question to Skip`);
             }
             break;
         }
     }
+    // Send buttons again after 5 skips
     if(totalSkipped >= 5){
         setTimeout(() => {
-            sendButtons(client, cookies);
+            sendButtons(client, accounts);
         }, 30*1000);
         totalSkipped = 0;
     }
   });
 
-// Loop
+// Constants
+const waitTimeSec = parseInt(process.env.waitTimeSec) || 30;
+const extraTime = parseInt(process.env.extraTime) || 2*60;
+const wakeTime = parseInt(process.env.wakeTime) || 6;
+const timeZone = parseInt(process.env.timeZone) || 5;
+let on = 1;
+let forceOn = 0;
+let msgSent = 0;
+let currHours = (new Date().getHours()+timeZone)%24;
 
+// Loop every (waitTime) seconds
 setInterval(async () => {
+    // update cookies every hour at XX:30
     if (new Date().getMinutes() === 0){
-        updateCookies();
+        initialiseOrUpdateAccounts();
     }
     currHours = (new Date().getHours()+timeZone)%24;
     
@@ -141,63 +143,79 @@ setInterval(async () => {
         sendMessage(client, "Bot is now sleeping, so should you 😴😴\nUse command on/activate to wake it up");
         console.log("sleeping");
     }
-    // if bot is on
+    if (currHours == 14){  // time to check for limit changes 2.30 PM
+        handleLimitChanges();
+    }
+    // if anyhow bot is on
     if(on || forceOn){
+        handleAccounts();
+    }
+}, waitTimeSec * 1000); // Convert time to milliseconds
+
+
+
+async function handleAccounts(){
     for(let account of accounts){
-        if (currHours == 14){  // time to check for limit changes 2.30 PM
-            const limitData = await account.getLimit();
-            const newLimit = limitData.data.expertAnsweringLimit.currentLimit;
-            if (account.limit != newLimit){
-                account.updateLimit(newLimit);
-                sendMessage(client, "❗❗ Attention ❗❗");
-                sendMessage(client, `${account.name} Limit Changed to : ${newLimit}`);
-            }
-        }
-        if(account.timeToCheck >= (Math.floor(Date.now()/1000))){
-            console.log("Continued in ", account.name);
+        if(account.goodToCheck()){
+            console.log(account.name, "Continued");
             continue;
         }
         try {
             let data = await account.fetchDataFromApi()
-        // Check data is fetched if not continue to next account;
+        // Check data is fetched if not continue to next account
         if(!data){
-            console.log("There is some problem fetching data in ", account.name);
+            console.log(account.name, "There is some problem fetching data");
             continue;
         }
 
-        // If data don't have a question : continue
+        if (data.errorCode == "invalid_token"){
+            console.log(account.name, "Tokens Expired");
+            continue;
+            // TODO : notify for the invalid token
+        }
         if (data.errors){
-            console.log( account.name , `Waiting for ${waitTimeSec} seconds...`);
+            console.log( account.name, `waiting for ${waitTimeSec} seconds...`);
             account.updateLastMessages([]);
             continue;
         }
-        const que = data.data.nextQuestionAnsweringAssignment.question;  // get fetched question
-        // Check if queID and lastID are equal
-        if(que.id == account.lastQuestionId){
-            account.updateTimeToCheck(Math.floor(Date.now()/1000)+extraTime);
-            console.log(account.name ,`Waiting for ${extraTime} seconds`);
+        const que = data.data?.nextQuestionAnsweringAssignment?.question;  // get fetched question
+        // Same que found again
+        if(que && que.id == account.lastQuestionId){
+            account.updateTimeToCheck(extraTime);
+            console.log(account.name ,`waiting for ${extraTime} seconds`);
             continue;
         }
         // If data have a question : send a message by the bot
-        console.log("Got a Question Updating data");
+        console.log(account.name, "Got a Question Updating data");
         account.updateLastQuestionId(que.id);
-        account.updateTimeToCheck(Math.floor(Date.now()/1000)+extraTime);
-        // send new question message
-        const lastMessages = sendQuestionMessage(client, que.body, account.name);
-        account.updateLastMessages(lastMessages);
+        account.updateTimeToCheck(extraTime);
         // try to accept the Question
-        const response = await account.acceptQuestion(); 
+        const response = await account.acceptQuestion();
         if(response.errors){
-            // sendMessage(client, "Accepted ❌");
-        // }else{
-        //     sendMessage(client, "Accepted ✅");
+            console.log(account.name, "Question already accepted");
+        }else{
+            // send new question message
+            const lastMessages = sendQuestionMessage(client, que.body, account.name);
+            account.updateLastMessages(lastMessages);
+            console.log(account.name, "Question Sent");
         }
         } catch (error) {
-            console.error('Some error occured:', error);
+            console.error('Some error occured in index.js ', error);
         }
     }
-}}, waitTimeSec * 1000); // Convert time to milliseconds
+}
 
-
+async function handleLimitChanges(){
+    for(let account of accounts){
+        const limitData = await account.getLimit();
+        const newLimit = limitData?.data?.expertAnsweringLimit?.currentLimit;
+        if (newLimit && account.limit != newLimit){
+            account.updateLimit(newLimit);
+            sendMessage(client, "❗❗ Attention ❗❗");
+            sendMessage(client, `${account.name} Limit Changed to : ${newLimit}`);
+            console.log(`${account.name} Limit Changed to : ${newLimit}`);
+        }
+    }
+}
 
 client.login(process.env.TOKEN);

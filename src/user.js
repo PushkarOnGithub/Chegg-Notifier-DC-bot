@@ -126,11 +126,14 @@ class User {
   updateLastQuestionId(newID) {
     this.lastQuestionId = newID;
   }
-  updateTimeToCheck(newTime) {
-    this.timeToCheck = newTime;
+  updateTimeToCheck(newTime=0) {
+    this.timeToCheck = (Math.floor(Date.now()/1000)) + newTime;
   }
   updateLastMessages(lastMessages) {
     this.lastMessages = lastMessages;
+  }
+  goodToCheck() {
+    return this.timeToCheck >= (Math.floor(Date.now()/1000));
   }
 }
 
