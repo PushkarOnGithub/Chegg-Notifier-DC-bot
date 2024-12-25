@@ -1,0 +1,30 @@
+name: Update Cookies via Puppeteer
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+
+jobs:
+  run-puppeteer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Decrypt Service Account Key
+      env:
+        PASSWORD: ${{ secrets.SERVICE_ACCOUNT_KEY_PASSWORD }}
+      run: |
+        openssl aes-256-cbc -d -in serviceAccountKey.json.enc -out serviceAccountKey.json -k "$PASSWORD"
+
+      - name: Install dependencies
+        run: npm install puppeteer firebase-admin dotenv
+
+      - name: Run Puppeteer script
+        run: node fetchAndUpdateFirebaseCookies.js

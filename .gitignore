@@ -8,4 +8,6 @@ firebaseCreds.js
 accounts.json
 serviceAccountKey.json
 otherAccounts.json
+testAccounts.json
+puppeteer-daily/
 tests/
