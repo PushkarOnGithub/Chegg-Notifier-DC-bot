@@ -22,8 +22,13 @@ jobs:
         PASSWORD: ${{ secrets.SERVICE_ACCOUNT_KEY_PASSWORD }}
       run: |
         openssl aes-256-cbc -d -in serviceAccountKey.json.enc -out serviceAccountKey.json -k "$PASSWORD"
+        
+    - name: Decrypt Account File
+      env:
+        PASSWORD: ${{ secrets.SERVICE_ACCOUNT_KEY_PASSWORD }}
       run: |
         openssl aes-256-cbc -d -in accounts.json.enc -out accounts.json -k "$PASSWORD"
+      
 
     - name: Install dependencies
       run: npm install puppeteer firebase-admin dotenv
