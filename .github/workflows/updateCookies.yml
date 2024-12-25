@@ -1,8 +1,8 @@
 name: Update Cookies via Puppeteer
 
 on:
-  push:
-    branches: [ "master" ]
+  schedule:
+    - cron: '0 */6 * * *'
 
 jobs:
 
@@ -21,13 +21,13 @@ jobs:
       env:
         PASSWORD: ${{ secrets.SERVICE_ACCOUNT_KEY_PASSWORD }}
       run: |
-        openssl aes-256-cbc -d -in serviceAccountKey.json.enc -out serviceAccountKey.json -k "$PASSWORD"
-        
+        openssl aes-256-cbc -d -in ./src/serviceAccountKey.json.enc -out ./src/serviceAccountKey.json -k "$PASSWORD"
+
     - name: Decrypt Account File
       env:
         PASSWORD: ${{ secrets.SERVICE_ACCOUNT_KEY_PASSWORD }}
       run: |
-        openssl aes-256-cbc -d -in accounts.json.enc -out accounts.json -k "$PASSWORD"
+        openssl aes-256-cbc -d -in ./src/accounts.json.enc -out ./src/accounts.json -k "$PASSWORD"
       
 
     - name: Install dependencies
