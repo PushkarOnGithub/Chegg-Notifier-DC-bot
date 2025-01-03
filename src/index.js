@@ -1,8 +1,7 @@
 const { Client, IntentsBitField } = require('discord.js');
 const User = require('./user');
 const {sendMessage, sendQuestionMessage, dryRUN, sendButtons} = require('./modules');
-const { getCookies } = require('./firebase');
-const {updateFirebaseCookies} = require('./fetchAndUpdateFirebaseCookies');
+const { getCollection } = require('./firebase');
 
 require('dotenv').config();
 
@@ -49,11 +48,6 @@ client.on('messageCreate', (msg) => {
         setTimeout(() => sendButtons(client, accounts), 10000);
         return;
     }
-    // Update Firebase cookies if in control channel and by authorized users
-    if (content === "update" && isControlChannel && isAuthorizedUser) {
-        updateFirebaseCookies();
-        return msg.reply("Updated");
-    }
     // Send buttons if in control channel
     if (content === "buttons" && isControlChannel) {
         return sendButtons(client, accounts);
@@ -63,7 +57,7 @@ client.on('messageCreate', (msg) => {
 let accounts = [];
 // Initialise accounts or update accounts with new cookies
 async function initialiseOrUpdateAccounts(){
-    let cookies = await getCookies();
+    let cookies = await getCollection(process.env.cookiesCollectionName);
     if (accounts.length == 0){
         for(let cookie of cookies){
             const account = new User(cookie.name, cookie.cookie);

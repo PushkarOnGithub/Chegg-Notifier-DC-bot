@@ -3,7 +3,6 @@ const admin = require("firebase-admin");
 const serviceAccount = require("./serviceAccountKey.json");
 
 let firebaseDb;
-const collectionName = process.env.collectionName;
 
 // Initialise Firebase Admin SDK
 const InitialiseFirebaseAdminApp = () => {
@@ -21,19 +20,8 @@ const InitialiseFirebaseAdminApp = () => {
 
 InitialiseFirebaseAdminApp();
 
-// Upload Data to Firestore
-const uploadData = async (dataToUpload) => {
-  try {
-    const documentRef = firebaseDb.collection(collectionName).doc(dataToUpload.name);
-    let uploadedData = await documentRef.set(dataToUpload);
-    return uploadedData;
-  } catch (error) {
-    console.log("Error in uploading data", error);
-  }
-};
-
-// Get Cookies (Documents from Firestore)
-const getCookies = async () => {
+const getCollection = async (collectionName) => {
+  // Get a collection by its name
   try {
     const collectionRef = firebaseDb.collection(collectionName);
     const data = [];
@@ -48,7 +36,4 @@ const getCookies = async () => {
   }
 };
 
-// Export the functions
-const getFireBaseApp = () => admin;
-
-module.exports = { getFireBaseApp, uploadData, getCookies };
+module.exports = { getCollection };

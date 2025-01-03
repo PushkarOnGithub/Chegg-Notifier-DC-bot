@@ -1,13 +1,6 @@
-tempcodefile.js
-test.js
-test2.js
 .env
-cookies.js
+test.js
 node_modules/
-firebaseCreds.js
-accounts.json
 serviceAccountKey.json
-otherAccounts.json
-testAccounts.json
-puppeteer-daily/
 tests/
+examples/

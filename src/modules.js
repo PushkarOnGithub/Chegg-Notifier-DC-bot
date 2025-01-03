@@ -5,16 +5,17 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require("discord.js");
-// Function to extract text from HTML
+
 function processHtml(html) {
+  // Function to extract text from HTML
   const trimmedString = html.replace(/<\/?[^>]+(>|$)/g, "");
   const first50Words = trimmedString.split(/\s+/).slice(0, 50);
   const resultString = first50Words.join(" ");
   return resultString;
 }
 
-// Function to extract image URLs from HTML
 function extractImageUrls(html) {
+  // Function to extract image URLs from HTML
   const regex = /<img .*?src=['"](.*?)['"].*?>/g;
   const matches = [];
   let match;
@@ -118,4 +119,4 @@ const sendButtons = (client, accounts) => {
   }
 };
 
-module.exports = { sendMessage, sendQuestionMessage, dryRUN, sendButtons, extractImageUrls, processHtml };
+module.exports = { sendMessage, sendQuestionMessage, dryRUN, sendButtons };
