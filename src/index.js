@@ -58,18 +58,16 @@ let accounts = [];
 // Initialise accounts or update accounts with new cookies
 async function initialiseOrUpdateAccounts(){
     let cookies = await getCollection(process.env.cookiesCollectionName);
+    accounts = [];
     if (accounts.length == 0){
-        for(let cookie of cookies){
-            const account = new User(cookie.name, cookie.cookie);
-            accounts.push(account);
-            console.log(cookie.name);
-        }
-        console.log("Accounts Initialised")
+        console.log("Accounts initialised");
     }else{
-        for(let i = 0;i<accounts.length;i++){
-            accounts[i].cookie = cookies[i].cookie;
-        }
-        console.log("cookies changed");
+        console.log("Cookies updated");
+    }
+    for(let cookie of cookies){
+        const account = new User(cookie.name, cookie.cookie);
+        accounts.push(account);
+        console.log(cookie.name);
     }
 }
 let totalSkipped = 0;

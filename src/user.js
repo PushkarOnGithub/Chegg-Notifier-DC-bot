@@ -70,7 +70,11 @@ class User {
     if (this.lastMessages.length === 0) {
       return false;
     }
-
+    const reasons = [
+      { primaryReason: "020", secondaryReason: "" },
+      { primaryReason: "018", secondaryReason: "" },
+      { primaryReason: "019", secondaryReason: "" },
+    ]
     const requestOptions = {
       method: "POST",
       body: JSON.stringify({
@@ -78,7 +82,7 @@ class User {
         variables: {
           questionId: this.lastQuestionId,
           skipPageFlow: "ANSWERING",
-          newSkipReason: { primaryReason: "020", secondaryReason: "" },
+          newSkipReason: reasons[Math.floor(Math.random() * reasons.length)],
         },
         query:
           "mutation SkipQuestionAssignment($questionId: Long!, $skipPageFlow: QnaCurrentPageFlow!, $skipPrimaryReason: QuestionSkipPrimaryReasons, $newSkipReason: QuestionNewSkipReasons) {\n  skipQuestionAssignment(\n    questionId: $questionId\n    skipPageFlow: $skipPageFlow\n    skipPrimaryReason: $skipPrimaryReason\n    newSkipReason: $newSkipReason\n  ) {\n    message\n    questionId\n    __typename\n  }\n}",
