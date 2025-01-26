@@ -1,7 +1,10 @@
 const { Client, IntentsBitField } = require('discord.js');
 const User = require('./user');
-const {sendMessage, sendQuestionMessage, dryRUN, sendButtons} = require('./modules');
+const { sendMessage, sendButtons } = require('./utils/discordMessageUtils');
+const { dryRUN } = require('./utils/dryRunUtils');
 const { getCollection } = require('./firebase');
+const handleNewQuestions = require('./utils/handleNewQuestions');
+const handleAnswers = require('./utils/handleAnswers');
 
 require('dotenv').config();
 
@@ -58,12 +61,12 @@ let accounts = [];
 // Initialise accounts or update accounts with new cookies
 async function initialiseOrUpdateAccounts(){
     let cookies = await getCollection(process.env.cookiesCollectionName);
-    accounts = [];
     if (accounts.length == 0){
         console.log("Accounts initialised");
     }else{
         console.log("Cookies updated");
     }
+    accounts.length = 0;
     for(let cookie of cookies){
         const account = new User(cookie.name, cookie.cookie);
         accounts.push(account);
@@ -113,8 +116,8 @@ let currHours = (new Date().getHours()+timeZone)%24;
 
 // Loop every (waitTime) seconds
 setInterval(async () => {
-    // update cookies every hour at XX:30
-    if (new Date().getMinutes() === 0){
+    // update cookies every hour at around XX:30
+    if (new Date().getMinutes() <= waitTimeSec/60){
         initialiseOrUpdateAccounts();
     }
     currHours = (new Date().getHours()+timeZone)%24;
@@ -135,67 +138,16 @@ setInterval(async () => {
         sendMessage(client, "Bot is now sleeping, so should you 😴😴\nUse command on/activate to wake it up");
         console.log("sleeping");
     }
-    if (currHours == 14){  // time to check for limit changes 2.30 PM
+    if (currHours == 14){  // at 2.30 PM
         handleLimitChanges();
+        handleAnswers(client, accounts);
     }
     // if anyhow bot is on
     if(on || forceOn){
-        handleAccounts();
+        handleNewQuestions(accounts, client, extraTime, waitTimeSec);
     }
 }, waitTimeSec * 1000); // Convert time to milliseconds
 
-
-
-async function handleAccounts(){
-    for(let account of accounts){
-        if(account.goodToCheck()){
-            console.log(account.name, "Continued");
-            continue;
-        }
-        try {
-            let data = await account.fetchDataFromApi()
-        // Check data is fetched if not continue to next account
-        if(!data){
-            console.log(account.name, "There is some problem fetching data");
-            continue;
-        }
-
-        if (data.errorCode == "invalid_token"){
-            console.log(account.name, "Tokens Expired");
-            continue;
-            // TODO : notify for the invalid token
-        }
-        if (data.errors){
-            console.log( account.name, `waiting for ${waitTimeSec} seconds...`);
-            account.updateLastMessages([]);
-            continue;
-        }
-        const que = data.data?.nextQuestionAnsweringAssignment?.question;  // get fetched question
-        // Same que found again
-        if(que && que.id == account.lastQuestionId){
-            account.updateTimeToCheck(extraTime);
-            console.log(account.name ,`waiting for ${extraTime} seconds`);
-            continue;
-        }
-        // If data have a question : send a message by the bot
-        console.log(account.name, "Got a Question Updating data");
-        account.updateLastQuestionId(que.id);
-        account.updateTimeToCheck(extraTime);
-        // try to accept the Question
-        const response = await account.acceptQuestion();
-        if(response.errors){
-            console.log(account.name, "Question already accepted");
-        }else{
-            // send new question message
-            const lastMessages = sendQuestionMessage(client, que.body, account.name);
-            account.updateLastMessages(lastMessages);
-            console.log(account.name, "Question Sent");
-        }
-        } catch (error) {
-            console.error('Some error occured in index.js ', error);
-        }
-    }
-}
 
 async function handleLimitChanges(){
     for(let account of accounts){

@@ -1,5 +1,5 @@
 const { Client, IntentsBitField } = require('discord.js');
-const {sendMessage } = require('./modules');
+const { sendMessage } = require('./discordMessageUtils');
 
 require('dotenv').config();
 

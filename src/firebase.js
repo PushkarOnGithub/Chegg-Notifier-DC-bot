@@ -20,8 +20,19 @@ const InitialiseFirebaseAdminApp = () => {
 
 InitialiseFirebaseAdminApp();
 
-const getCollection = async (collectionName) => {
-  // Get a collection by its name
+// Upload A Collection to Firestore
+async function uploadCollection(collectionName, documentId, dataToUpload){
+  try {
+    const documentRef = firebaseDb.collection(collectionName).doc(documentId);
+    let uploadedData = await documentRef.set(dataToUpload);
+    return uploadedData;
+  } catch (error) {
+    console.log("Error in uploading data", error);
+  }
+};
+
+// Get A Collection from firebase
+async function getCollection(collectionName){
   try {
     const collectionRef = firebaseDb.collection(collectionName);
     const data = [];
@@ -36,4 +47,4 @@ const getCollection = async (collectionName) => {
   }
 };
 
-module.exports = { getCollection };
+module.exports = { uploadCollection, getCollection };

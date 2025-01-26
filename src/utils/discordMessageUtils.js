@@ -6,7 +6,9 @@ const {
   ButtonStyle,
 } = require("discord.js");
 
-const sendMessage = (client, msg) => {
+const { extractImageUrls, processHtml } = require("./htmlUtils");
+
+function sendMessage(client, msg) {
   try {
     const channel = client.channels.cache.get(process.env.channelId);
     if (!channel) throw new Error("Channel not found");
@@ -14,9 +16,9 @@ const sendMessage = (client, msg) => {
   } catch (error) {
     console.error("Failed to send message:", error);
   }
-};
+}
 
-const sendQuestionMessage = (client, questionBody, msgText) => {
+function sendQuestionMessage(client, questionBody, msgText) {
   // return [];
   const LastMessages = [];
   // get the channel
@@ -51,21 +53,9 @@ const sendQuestionMessage = (client, questionBody, msgText) => {
       });
   }
   return LastMessages;
-};
+}
 
-const dryRUN = async (client, accounts) => {
-  const channel = client.channels.cache.get(process.env.controlChannelId);
-  for (let account of accounts) {
-    try {
-      const data = await account.fetchDataFromApi();
-      channel.send(account.name + " " + JSON.stringify(data).slice(0, 175));
-    } catch (error) {
-      console.log(error);
-    }
-  }
-};
-
-const sendButtons = (client, accounts) => {
+function sendButtons(client, accounts) {
   // split the buttons into chunks of 4 because max button limit is 5
   const total = accounts.length;
   try {
@@ -98,6 +88,6 @@ const sendButtons = (client, accounts) => {
   } catch (e) {
     console.log("Error in DRYRUN", e.message);
   }
-};
+}
 
-module.exports = { sendMessage, sendQuestionMessage, dryRUN, sendButtons };
+module.exports = { sendMessage, sendQuestionMessage, sendButtons };

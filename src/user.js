@@ -128,6 +128,31 @@ class User {
       console.log(error);
     }
   }
+  async getAnswers() {
+    const requestOptions = {
+      method: "POST",
+      body: JSON.stringify({
+        operationName: "myAnswers",
+        variables: {first: 0, last: 20, filters: {lookbackPeriod: "ALL", rating: "ALL"}},
+        query:
+          "query myAnswers($last: Int!, $first: Int!, $filters: AnswerFilters) {\n  myAnswers(last: $last, first: $first, filters: $filters) {\n    edges {\n      node {\n        answeredDate\n        id\n        uuid\n        isStructuredAnswer\n        isDeleted\n        question {\n          language\n          body\n          title\n          isDeleted\n          subject {\n            subjectGroup {\n              name\n              __typename\n            }\n            __typename\n          }\n          uuid\n          id\n          questionTemplate {\n            templateName\n            templateId\n            __typename\n          }\n          __typename\n        }\n        studentRating {\n          negative\n          positive\n          __typename\n        }\n        qcReview {\n          overallQcRating\n          isInvalid\n          isQcOfQcRating\n          reviewRubricVersion\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    totalResults\n    pageInfo {\n      startCursor\n      __typename\n    }\n    __typename\n  }\n}",
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        "Apollographql-Client-Name": "chegg-web-producers",
+        Authorization:
+          "Basic alNNNG5iVHNXV0lHR2Y3OU1XVXJlQjA3YmpFeHJrRzM6SmQxbTVmd3o3aHRobnlCWg==",
+        Cookie: this.cookie,
+      },
+    };
+    try {
+      const res = await fetch(this.#apiUrl, requestOptions);
+      const data = await res.json();
+      return data;
+    } catch (error) {
+      console.log(error);
+    }
+  }
   updateLimit(newLimit) {
     this.limit = newLimit;
   }
