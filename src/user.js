@@ -153,6 +153,9 @@ class User {
       console.log(error);
     }
   }
+  updateCookie(newCookie) {
+    this.cookie = newCookie;
+  }
   updateLimit(newLimit) {
     this.limit = newLimit;
   }

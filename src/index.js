@@ -63,14 +63,22 @@ async function initialiseOrUpdateAccounts(){
     let cookies = await getCollection(process.env.cookiesCollectionName);
     if (accounts.length == 0){
         console.log("Accounts initialised");
+        for(let cookie of cookies){
+            const account = new User(cookie.name, cookie.cookie);
+            accounts.push(account);
+            console.log(cookie.name);
+        }
     }else{
         console.log("Cookies updated");
-    }
-    accounts.length = 0;
-    for(let cookie of cookies){
-        const account = new User(cookie.name, cookie.cookie);
-        accounts.push(account);
-        console.log(cookie.name);
+        for(let account of accounts){
+            for(let cookie of cookies){
+                if(account.name == cookie.name){
+                    account.updateCookie(cookie.cookie);
+                    console.log(cookie.name);
+                    break;
+                }
+            }
+        }
     }
 }
 let totalSkipped = 0;
