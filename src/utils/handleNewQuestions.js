@@ -1,6 +1,6 @@
-const sendQuestionMessage = require("./discordMessageUtils");
+const { sendQuestionMessage } = require("./discordMessageUtils");
 
-async function handleNewQuestions(accounts, client, extraTime, waitTimeSec) {
+async function handleNewQuestions(client, accounts, extraTime, waitTimeSec) {
   for (let account of accounts) {
     if (account.goodToCheck()) {
       console.log(account.name, "Continued");

@@ -9,20 +9,22 @@ const {
 const { extractImageUrls, processHtml } = require("./htmlUtils");
 
 function sendMessage(client, msg) {
-  try {
-    const channel = client.channels.cache.get(process.env.channelId);
-    if (!channel) throw new Error("Channel not found");
+  if ( !msg ) throw new Error("msg must be not null");
+  if ( typeof msg !== "string" ) throw new TypeError("msg must be a string");
+
+    const channel = client?.channels?.cache?.get(process.env.channelId);
+    if ( !channel ) throw new Error("Channel not found");
+
     channel.send(msg);
-  } catch (error) {
-    console.error("Failed to send message:", error);
-  }
 }
 
 function sendQuestionMessage(client, questionBody, msgText) {
   // return [];
   const LastMessages = [];
   // get the channel
-  const channel = client.channels.cache.get(process.env.channelId);
+  const channel = client?.channels?.cache?.get(process.env.channelId);
+
+  if ( !channel ) throw new Error("Channel not found");
 
   // try to get any Image Urls
   const imageUrls = extractImageUrls(questionBody);

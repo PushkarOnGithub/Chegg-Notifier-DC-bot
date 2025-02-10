@@ -1,6 +1,6 @@
 const { getCollection, uploadCollection } = require("../firebase");
 const { compareAnswersAndNotify, parseAnswers } = require("./answersUtils");
-const fs = require("fs");
+// const fs = require("fs");
 
 async function handleAnswers(client, accounts) {
   const answersCollectionName = process.env.answersCollectionName || "answers";

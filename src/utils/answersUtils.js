@@ -29,7 +29,7 @@ function compareAnswersAndNotify(oldAnswers, newAnswers, client, account) {
     if (
       oldAnswers[id] &&
       !oldAnswers[id].qcReview &&
-      newAnswers[id]?.qcReview?.overallQcRating === 0
+      newAnswers[id]?.qcReview?.overallQcRating <= 3
     ) {
       console.log("QC Review mismatch for question", id);
       sendQuestionMessage(

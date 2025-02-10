@@ -1,4 +1,3 @@
-require("dotenv").config();
 const admin = require("firebase-admin");
 const serviceAccount = require("./serviceAccountKey.json");
 
@@ -34,11 +33,13 @@ async function uploadCollection(collectionName, documentId, dataToUpload){
 // Get A Collection from firebase
 async function getCollection(collectionName){
   try {
+    if(! collectionName ) return [];
     const collectionRef = firebaseDb.collection(collectionName);
     const data = [];
     const snapshot = await collectionRef.get();
 
     snapshot.forEach((doc) => {
+      // console.log(doc.id)
       data.push(doc.data());
     });
     return data;

@@ -47,8 +47,8 @@ client.on('messageCreate', (msg) => {
     // Execute dryRUN command if in control channel and by authorized users
     if (content === "dryrun" && isControlChannel && isAuthorizedUser) {
         initialiseOrUpdateAccounts();
-        dryRUN(client, accounts);
-        setTimeout(() => sendButtons(client, accounts), 10000);
+        setTimeout(() => dryRUN(client, accounts), 5000);
+        setTimeout(() => sendButtons(client, accounts), 15000);
         return;
     }
     // Send buttons if in control channel
@@ -107,7 +107,7 @@ client.on('interactionCreate', async (interaction) => {
     if(totalSkipped >= 5){
         setTimeout(() => {
             sendButtons(client, accounts);
-        }, 30*1000);
+        }, 2*1000);
         totalSkipped = 0;
     }
   });
@@ -152,7 +152,7 @@ setInterval(async () => {
     }
     // if anyhow bot is on
     if(on || forceOn){
-        handleNewQuestions(accounts, client, extraTime, waitTimeSec);
+        handleNewQuestions(client, accounts, extraTime, waitTimeSec);
     }
 }, waitTimeSec * 1000); // Convert time to milliseconds
 
