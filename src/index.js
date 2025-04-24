@@ -148,7 +148,7 @@ setInterval(async () => {
     }
     if (currHours == 14){  // at 2.30 PM
         handleLimitChanges();
-        handleAnswers(client, accounts);
+        // handleAnswers(client, accounts);
     }
     // if anyhow bot is on
     if(on || forceOn){
